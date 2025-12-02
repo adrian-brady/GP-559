@@ -2,6 +2,13 @@ import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { EntityManager } from '../managers/EntityManager.js';
 import { GameScene } from '../scenes/GameScene.js';
 import { InputSystem } from '../systems/InputSystem.js';
+import {
+  init as initRapier,
+  World as RapierWorld,
+} from '@dimforge/rapier3d-compat';
+
+import RAPIER from '@dimforge/rapier3d-compat';
+import { PhysicsSystem } from '../systems/PhysicsSystem.js';
 
 /**
  * Main world/scene manager
@@ -25,6 +32,15 @@ class World {
   /** @type {GameScene} */
   currentScene;
 
+  /** @type {RAPIER.World} */
+  physicsWorld;
+
+  /** @type {PhysicsSystem} */
+  physicsSystem;
+
+  /** @type {InputSystem} */
+  inputSystem;
+
   /**
    * @param {HTMLElement} container
    * @param {typeof GameScene} SceneClass
@@ -39,12 +55,18 @@ class World {
   /**
    * Start and initialize game loop
    */
-  start() {
+  async start() {
+    await initRapier();
+    const gravity = { x: 0.0, y: -9.81, z: 0.0 };
+    this.physicsWorld = new RapierWorld(gravity);
+    this.physicsSystem = new PhysicsSystem(this.physicsWorld);
+
     this.setupRenderer();
     this.setupCamera();
     this.onWindowResize();
     this.inputSystem.initialize();
-    this.currentScene.initialize(this.camera);
+
+    this.currentScene.initialize(this.camera, this.physicsWorld);
 
     window.addEventListener('resize', () => this.onWindowResize());
 
@@ -104,6 +126,8 @@ class World {
    */
   update(deltaTime) {
     this.inputSystem.update();
+
+    this.physicsSystem.update(this.entityManager, deltaTime);
 
     this.entityManager.entities.forEach(entity => {
       entity.update(deltaTime);

@@ -47,6 +47,7 @@ class Entity {
   addComponent(ComponentType, ...args) {
     const component = new ComponentType(this, ...args);
     this.components.push(component);
+    console.log('component added', component);
     return component;
   }
 
@@ -68,9 +69,9 @@ class Entity {
   }
 
   /** Updates each component one tick */
-  update() {
+  update(deltaTime) {
     for (const component of this.components) {
-      component.update();
+      component.update(deltaTime);
     }
   }
 }

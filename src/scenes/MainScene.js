@@ -6,6 +6,7 @@ import {
   MeshStandardMaterial,
   PlaneGeometry,
   PerspectiveCamera,
+  DoubleSide,
 } from 'three';
 import { GameScene } from './GameScene.js';
 import { MeshInstance } from '../components/MeshInstance.js';
@@ -42,15 +43,20 @@ class MainScene extends GameScene {
     const player = this.entityManager.createEntity(this.scene, 'player');
     const geometry = new BoxGeometry(1, 1, 1);
     const material = new MeshStandardMaterial({ color: 0x00ff00 });
-    player.addComponent(MeshInstance, geometry, material);
+    //player.addComponent(MeshInstance, geometry, material);
+    player.transform.position.set(0, -3, 0);
     player.addComponent(PlayerController);
-    player.addComponent(CameraFollow, this.camera);
+    const cameraFollow = player.addComponent(CameraFollow, this.camera);
+    cameraFollow.offset.set(0, 0.5, 0);
   }
 
   setupEnvironment() {
     const ground = this.entityManager.createEntity(this.scene, 'ground');
     const geometry = new PlaneGeometry(100, 100);
-    const material = new MeshStandardMaterial({ color: 0x888888 });
+    const material = new MeshStandardMaterial({
+      color: 0x888888,
+      side: DoubleSide,
+    });
     ground.addComponent(MeshInstance, geometry, material);
     ground.transform.rotateX(-Math.PI / 2);
     ground.transform.position.y = -5;

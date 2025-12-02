@@ -1,5 +1,6 @@
 import { PerspectiveCamera, Scene } from 'three';
 import { EntityManager } from '../managers/EntityManager.js';
+import RAPIER from '@dimforge/rapier3d-compat';
 
 class GameScene {
   /** @type {Scene} */
@@ -7,6 +8,9 @@ class GameScene {
 
   /** @type {EntityManager} */
   entityManager;
+
+  /** @type {RAPIER.World} */
+  physicsWorld;
 
   /**
    * @param {Scene} scene Three.js scene
@@ -21,7 +25,9 @@ class GameScene {
    * Override to setup scene entities and components
    * @param {PerspectiveCamera} camera
    */
-  initialize(camera) {}
+  initialize(camera, physicsWorld) {
+    this.physicsWorld = physicsWorld;
+  }
 }
 
 export { GameScene };
