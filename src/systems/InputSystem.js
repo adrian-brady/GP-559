@@ -2,6 +2,9 @@ import { MoveCommand } from '../input/commands/MoveCommand.js';
 import { JumpCommand } from '../input/commands/JumpCommand.js';
 import { Vector3, PerspectiveCamera } from 'three';
 import { PlayerController } from '../components/PlayerController.js';
+import { LeanLeftCommand } from '../input/commands/LeanLeftCommand.js';
+import { LeanRightCommand } from '../input/commands/LeanRightCommand.js';
+import { ReloadCommand } from '../input/commands/ReloadCommand.js';
 
 class InputSystem {
   /** @type {EntityManager} */
@@ -70,6 +73,22 @@ class InputSystem {
         this.mouseY += e.movementY;
       }
     });
+
+    document.addEventListener('mousedown', e => {
+      if (e.button === 2) {
+        this.keysPressed['rightclick'] = true;
+      }
+    });
+
+    document.addEventListener('mouseup', e => {
+      if (e.button === 2) {
+        this.keysPressed['rightclick'] = false;
+      }
+    });
+
+    document.addEventListener('contextmenu', e => {
+      e.preventDefault();
+    });
   }
 
   /**
@@ -78,11 +97,21 @@ class InputSystem {
   update() {
     this.updateMouseLook();
     const movementInput = this.getMovementInput();
+    const isAiming = this.keysPressed['rightclick'];
 
     this.entityManager.entities.forEach(entity => {
+      /** @type {PlayerController} */
       const controller = entity.getComponent(PlayerController);
-      if (controller && movementInput.length() > 0) {
-        new MoveCommand(movementInput).execute(controller);
+      if (controller) {
+        if (movementInput.length() > 0) {
+          new MoveCommand(movementInput).execute(controller);
+        }
+
+        if (isAiming) {
+          controller.handleAim();
+        } else {
+          controller.handleAimRelease();
+        }
       }
     });
   }
@@ -119,6 +148,11 @@ class InputSystem {
   handleKeyDown(key) {
     const commands = {
       ' ': () => new JumpCommand(),
+      c: () => new CrouchCommand(),
+      x: () => new ProneCommand(),
+      q: () => new LeanLeftCommand(),
+      e: () => new LeanRightCommand(),
+      r: () => new ReloadCommand(),
     };
 
     const command = commands[key]?.();
@@ -142,7 +176,15 @@ class InputSystem {
     if (this.keysPressed['a']) direction.x -= 1;
     if (this.keysPressed['s']) direction.z += 1;
     if (this.keysPressed['d']) direction.x += 1;
-    return direction.normalize();
+
+    if (direction.length() === 0) return direction;
+
+    direction.normalize();
+
+    const rotatedDirection = direction.clone();
+    rotatedDirection.applyAxisAngle(new Vector3(0, 1, 0), this.yaw);
+
+    return rotatedDirection;
   }
 }
 

@@ -1,7 +1,18 @@
 import { Component } from '../ecs/Component.js';
 import { Vector3 } from 'three';
-import { IdleState } from './states/IdleState.js';
-import { PlayerState } from './states/PlayerState.js';
+import {
+  GroundingState,
+  LeanState,
+  WeaponState,
+  StanceState,
+  MovementState,
+} from './states/PlayerState.js';
+import { GroundingController } from './controllers/GroundingController.js';
+import { MovementController } from './controllers/MovementController.js';
+import { StanceController } from './controllers/StanceController.js';
+import { LeanController } from './controllers/LeanController.js';
+import { WeaponController } from './controllers/WeaponController.js';
+import RAPIER from '@dimforge/rapier3d-compat';
 
 class PlayerController extends Component {
   /** @type {Vector3} */
@@ -22,84 +33,118 @@ class PlayerController extends Component {
   /** @type {PlayerState[]} */
   stateStack = [];
 
+  groundingState = GroundingState.GROUNDED;
+  movementState = MovementState.IDLE;
+  stanceState = StanceState.STANDING;
+  weaponState = WeaponState.HIPFIRE;
+  leanState = LeanState.NONE;
+
+  /** @type {GroundingController} */
+  groundingController;
+
+  /** @type {MovementController} */
+  movementController;
+
+  /** @type {StanceController} */
+  stanceController;
+
+  /** @type {WeaponController} */
+  weaponController;
+
+  /** @type {LeanController} */
+  leanController;
+
+  /** @type {RAPIER.World} */
+  physicsWorld;
+
   /**
    * @param {Entity} entity
+   * @param {RAPIER.World} physicsWorld
    */
-  constructor(entity) {
+  constructor(entity, physicsWorld) {
     super(entity);
-    this.velocity = new Vector3();
-    this.push(new IdleState(this));
-  }
 
-  /**
-   * Push a state onto the stack
-   * @param {PlayerState} state
-   */
-  push(state) {
-    state.enter(this);
-    this.stateStack.push(state);
-  }
+    this.physicsWorld = physicsWorld;
 
-  /**
-   * Pop the current state
-   */
-  pop() {
-    const state = this.stateStack.pop();
-    if (state) {
-      state.exit(this);
-    }
-
-    // Call enter on new top state
-    const newTop = this.stateStack[this.stateStack.length - 1];
-    if (newTop) {
-      newTop.reenter(this);
-    }
-  }
-
-  /**
-   * Replace current state
-   * @param {PlayerState} state
-   */
-  change(state) {
-    this.pop();
-    this.push(state);
-  }
-
-  /**
-   * Get current (top) state
-   * @returns {PlayerState}
-   */
-  current() {
-    return this.stateStack[this.stateStack.length - 1];
+    this.groundingController = new GroundingController(this);
+    this.movementController = new MovementController(this);
+    this.stanceController = new StanceController(this);
+    this.weaponController = new WeaponController(this);
+    this.leanController = new LeanController(this);
   }
 
   /**
    * Called by MoveCommand
-   * @param {Vector3} direction
    */
   handleMove(direction) {
-    this.current()?.handleMove(this, direction);
+    this.movementController.handleMove(direction);
   }
 
   /**
    * Called by JumpCommand
    */
   handleJump() {
-    this.current()?.handleJump(this);
+    this.groundingController.handleJump();
+  }
+
+  /**
+   * Called by CrouchCommand
+   */
+  handleCrouch() {
+    this.stanceController.handleCrouch();
+  }
+
+  /**
+   * Called by ProneCommand
+   */
+  handleProne() {
+    this.stanceController.handleProne();
+  }
+
+  /**
+   * Called by LeanLeftCommand
+   */
+  handleLeanLeft() {
+    this.leanController.handleLeanLeft();
+  }
+
+  /**
+   * Called by LeanRightCommand
+   */
+  handleLeanRight() {
+    this.leanController.handleLeanRight();
+  }
+
+  /**
+   * Called by AimCommand
+   */
+  handleAim() {
+    this.weaponController.handleAim();
+  }
+
+  /**
+   * Called by ReleaseAimCommand
+   */
+  handleAimRelease() {
+    this.weaponController.handleAimRelease();
+  }
+
+  /**
+   * Called by ReloadCommand
+   */
+  handleReload() {
+    this.weaponController.handleReload();
   }
 
   /**
    * @param {number} deltaTime
    */
   update(deltaTime) {
-    const currentState = this.current();
-    if (currentState) {
-      currentState.update(this, deltaTime);
-    }
-
-    this.entity.transform.position.add(
-      this.velocity.clone().multiplyScalar(deltaTime)
-    );
+    this.groundingController.update(deltaTime);
+    this.movementController.update(deltaTime);
+    this.stanceController.update(deltaTime);
+    this.weaponController.update(deltaTime);
+    this.leanController.update(deltaTime);
   }
 }
 

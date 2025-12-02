@@ -1,32 +1,63 @@
-import { PlayerController } from '../PlayerController.js';
+/**
+ * Player state layer enums
+ * Each layer represents an independent aspect of player state
+ */
 
 /**
- * Base state class for player controller
+ * Grounding Layer (mutually exclusive)
+ * Determines if player is on ground or in air
+ * @readonly
+ * @enum {string}
  */
-class PlayerState {
-  /**
-   * Called when entering this state
-   * @param {PlayerController} controller
-   */
-  enter(controller) {}
+export const GroundingState = {
+  GROUNDED: 'grounded',
+  AIRBORNE: 'airborne',
+};
 
-  /**
-   * Called every frame while in this state
-   * @param {PlayerController} controller
-   * @param {number} deltaTime
-   */
-  update(controller, deltaTime) {}
+/**
+ * Movement Layer (mutually exclusive)
+ * Determines if player is idle or moving
+ * @readonly
+ * @enum {string}
+ */
+export const MovementState = {
+  IDLE: 'idle',
+  MOVING: 'moving',
+};
 
-  /**
-   * @param {PlayerController} controller
-   */
-  exit(controller) {}
+/**
+ * Stance Layer (mutually exclusive)
+ * Determines player's body position
+ * @readonly
+ * @enum {string}
+ */
+export const StanceState = {
+  STANDING: 'standing',
+  CROUCHING: 'crouching',
+  PRONE: 'prone',
+};
 
-  /**
-   * Called when returning to this state after a pop
-   * @param {PlayerController} controller
-   */
-  reenter(controller) {}
-}
+/**
+ * Weapon Layer (mutually exclusive)
+ * Determines weapon aiming/action state
+ * @readonly
+ * @enum {string}
+ */
+export const WeaponState = {
+  HIPFIRE: 'hipfire',
+  ADS: 'ads', // Aim Down Sights
+  FOCUS_HIPFIRE: 'focus_hipfire',
+  RELOAD: 'reload',
+};
 
-export { PlayerState };
+/**
+ * Lean Layer (mutually exclusive)
+ * Determines player lean direction
+ * @readonly
+ * @enum {string}
+ */
+export const LeanState = {
+  NONE: 'none',
+  LEFT: 'left',
+  RIGHT: 'right',
+};
