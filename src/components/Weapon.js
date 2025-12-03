@@ -271,20 +271,7 @@ class Weapon extends Component {
   }
 
   applyRecoil() {
-    const fire = this.definition.animations.fire;
-
-    const baseRecoil = fire.recoilAmount;
-    const variation = fire.recoilVariation;
-    this.recoilKick = baseRecoil * (1 + (Math.random() - 0.5) * 2 * variation);
-
-    const horzBase = fire.horizontalRecoil;
-    const horzVar = fire.horizontalVariation;
-    this.recoilHorizontal =
-      horzBase * (Math.random() - 0.5) * 2 * (1 + horzVar);
-
-    const vertBase = fire.verticalRecoil;
-    const vertVar = fire.verticalVariation;
-    this.recoilVertical = vertBase * (1 + (Math.random() - 0.5) * 2 * vertVar);
+    this.recoilKick = this.definition.animations.fire.recoilAmount;
   }
 
   updateRecoil(deltaTime) {
@@ -294,13 +281,8 @@ class Weapon extends Component {
     this.recoilKick -= deltaTime * recoverySpeed;
     if (this.recoilKick < 0) this.recoilKick = 0;
 
-    this.recoilHorizontal *= Math.exp(-recoverySpeed * deltaTime);
-    this.recoilVertical *= Math.exp(-recoverySpeed * deltaTime);
-
     this.weaponGroup.position.z = this.originalOffset.z + this.recoilKick;
-    this.weaponGroup.position.x = this.originalOffset.x + this.recoilHorizontal;
-    this.weaponGroup.rotation.x = -0.15 * this.recoilKick + this.recoilVertical;
-    15 * this.recoilKick;
+    this.weaponGroup.rotation.x = -0.15 * this.recoilKick;
   }
 
   /**
