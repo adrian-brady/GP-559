@@ -22,7 +22,8 @@ import RAPIER, { ColliderDesc } from '@dimforge/rapier3d-compat';
 import { RigidBody } from '../components/RigidBody.js';
 import { Entity } from '../ecs/Entity.js';
 import { Weapon } from '../components/Weapon.js';
-import { loadAK47 } from '../assets/models/WeaponModels.js';
+import { loadAK47, loadWeaponModel } from '../assets/models/WeaponModels.js';
+import { WeaponDefinitions } from '../config/WeaponDefinitions.js';
 
 class MainScene extends GameScene {
   /** @type {PerspectiveCamera} */
@@ -120,9 +121,11 @@ class MainScene extends GameScene {
     const cameraFollow = player.addComponent(CameraFollow, this.camera);
     cameraFollow.offset.set(0, 0.5, 0);
 
+    const weaponDef = WeaponDefinitions.ak47;
+
     let weaponModel;
     try {
-      weaponModel = await loadAK47();
+      weaponModel = await loadWeaponModel(weaponDef.modelPath);
       weaponModel.rotateY(Math.PI / 2);
       weaponModel.translateY(-0.1);
       weaponModel.translateX(-0.1);
@@ -134,7 +137,7 @@ class MainScene extends GameScene {
       weaponModel.castShadow = true;
     }
 
-    player.addComponent(Weapon, this.camera, weaponModel);
+    player.addComponent(Weapon, this.camera, weaponModel, weaponDef);
   }
 
   setupEnvironment() {

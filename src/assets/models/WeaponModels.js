@@ -30,11 +30,36 @@ async function loadWeaponModel(modelPath) {
         console.log('=== Weapon Structure ===');
         console.log('Root:', object.name);
 
+        // Color code each mesh to identify parts
+        const debugColors = [
+          0xff0000, // red
+          0x00ff00, // green
+          0x0000ff, // blue
+          0xffff00, // yellow
+          0xff00ff, // magenta
+          0x00ffff, // cyan
+          0xffffff, // white
+        ];
+
+        let meshIndex = 0;
+
         object.traverse(child => {
           console.log(`- ${child.name} (${child.type})`);
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = false;
+
+            const debugColor = debugColors[meshIndex % debugColors.length];
+            child.material = new MeshStandardMaterial({
+              color: debugColor,
+              roughness: 0.7,
+              metalness: 0.3,
+            });
+
+            console.log(`  Color: ${debugColor.toString(16)} for
+              ${child.name}`);
+
+            meshIndex++;
 
             if (Array.isArray(child.material)) {
               child.material = child.material.map(mat => {

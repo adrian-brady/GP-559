@@ -1,5 +1,6 @@
 import { PlayerController } from '../PlayerController.js';
 import { WeaponState } from '../states/PlayerState.js';
+import { Weapon } from '../Weapon.js';
 
 /**
  * Controls the weapon layer (hipfire/ADS/reload)
@@ -71,9 +72,15 @@ class WeaponController {
   handleReload() {
     if (this.player.weaponState !== WeaponState.RELOAD) {
       this.player.weaponState = WeaponState.RELOAD;
-      // TODO: Get reload duration from current weapon
-      // Currently uses a temp value
-      this.reloadTimer = 2.0;
+
+      const weapon = this.player.entity.getComponent(Weapon);
+      if (weapon) {
+        this.reloadTimer = weapon.definition.stats.reloadTime;
+        weapon.startReload();
+        console.log('Starting reload animation');
+      } else {
+        this.reloadTimer = 2.0;
+      }
     }
   }
 
