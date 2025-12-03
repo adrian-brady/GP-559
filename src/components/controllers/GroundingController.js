@@ -45,6 +45,7 @@ class GroundingController {
 
     this.player.groundingState = GroundingState.AIRBORNE;
     this.player.stanceController.forceStanding();
+    console.log('player grounding state:', this.player.groundingState);
   }
 
   /**
@@ -54,17 +55,25 @@ class GroundingController {
   checkGrounded(rigidBody) {
     const physicsWorld = this.player.physicsWorld;
     if (!physicsWorld) return;
-
     const ray = new RAPIER.Ray(rigidBody.body.translation(), {
       x: 0,
       y: -1,
       z: 0,
     });
 
-    const maxDistance = 1.1;
+    const maxDistance = 1.2;
     const solid = true;
 
-    const hit = physicsWorld.castRay(ray, maxDistance, solid);
+    const hit = physicsWorld.castRay(
+      ray,
+      maxDistance,
+      solid,
+      undefined,
+      undefined,
+      undefined,
+      rigidBody.collider
+    );
+    console.log('hit:', hit !== null);
 
     return hit !== null;
   }

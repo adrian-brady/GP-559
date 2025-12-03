@@ -57,7 +57,7 @@ class World {
    */
   async start() {
     await initRapier();
-    const gravity = { x: 0.0, y: -9.81, z: 0.0 };
+    const gravity = { x: 0.0, y: -12, z: 0.0 };
     this.physicsWorld = new RapierWorld(gravity);
     this.physicsSystem = new PhysicsSystem(this.physicsWorld);
 

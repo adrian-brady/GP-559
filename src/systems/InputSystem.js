@@ -157,6 +157,7 @@ class InputSystem {
 
     const command = commands[key]?.();
     if (!command) return;
+    console.log('command:', command);
 
     this.entityManager.entities.forEach(entity => {
       const controller = entity.getComponent(PlayerController);
