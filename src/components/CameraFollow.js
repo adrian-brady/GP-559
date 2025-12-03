@@ -2,7 +2,11 @@ import { PerspectiveCamera, Vector3 } from 'three';
 import { Component } from '../ecs/Component.js';
 import { Entity } from '../ecs/Entity.js';
 import { PlayerController } from './PlayerController.js';
-import { GroundingState, MovementState } from './states/PlayerState.js';
+import {
+  GroundingState,
+  MovementState,
+  StanceState,
+} from './states/PlayerState.js';
 
 class CameraFollow extends Component {
   /** @type {PerspectiveCamera} */
@@ -14,8 +18,14 @@ class CameraFollow extends Component {
   bobbingSpeed = 10.0;
   bobbingAmount = 0.05;
   bobbingHorizontal = 0.03;
-
   bobbingTime = 0;
+
+  standingHeight = 0.5;
+  crouchingHeight = 0;
+  proneHeight = -0.4;
+
+  currentHeight = 0.5;
+  heightTransitionSpeed = 6.0;
 
   /**
    * @param {Entity} entity
@@ -33,8 +43,23 @@ class CameraFollow extends Component {
     const playerController = this.entity.getComponent(PlayerController);
     if (!playerController) return;
 
+    let targetHeight = this.standingHeight;
+
+    if (playerController.stanceState === StanceState.CROUCHING) {
+      targetHeight = this.crouchingHeight;
+    } else if (playerController.stanceState === StanceState.PRONE) {
+      targetHeight = this.proneHeight;
+    }
+
+    this.currentHeight +=
+      (targetHeight - this.currentHeight) *
+      this.heightTransitionSpeed *
+      deltaTime;
+
     const targetPosition = this.entity.transform.position.clone();
-    targetPosition.add(this.offset);
+    targetPosition.x += this.offset.x;
+    targetPosition.y += this.currentHeight;
+    targetPosition.z += this.offset.z;
 
     if (this.bobbingEnabled && playerController) {
       const isMoving = playerController.movementState === MovementState.MOVING;

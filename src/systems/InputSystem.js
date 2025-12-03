@@ -1,10 +1,12 @@
 import { MoveCommand } from '../input/commands/MoveCommand.js';
+import { CrouchCommand } from '../input/commands/CrouchCommand.js';
 import { JumpCommand } from '../input/commands/JumpCommand.js';
 import { Vector3, PerspectiveCamera } from 'three';
 import { PlayerController } from '../components/PlayerController.js';
 import { LeanLeftCommand } from '../input/commands/LeanLeftCommand.js';
 import { LeanRightCommand } from '../input/commands/LeanRightCommand.js';
 import { ReloadCommand } from '../input/commands/ReloadCommand.js';
+import { ProneCommand } from '../input/commands/ProneCommand.js';
 
 class InputSystem {
   /** @type {EntityManager} */
