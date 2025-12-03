@@ -48,9 +48,9 @@ class MainScene extends GameScene {
 
   setupPlayer() {
     const player = this.entityManager.createEntity(this.scene, 'player');
-    const geometry = new BoxGeometry(1, 1, 1);
-    const material = new MeshStandardMaterial({ color: 0x00ff00 });
-    player.addComponent(MeshInstance, geometry, material);
+    // const geometry = new BoxGeometry(1, 1, 1);
+    // const material = new MeshStandardMaterial({ color: 0x00ff00 });
+    // player.addComponent(MeshInstance, geometry, material);
     player.transform.position.set(0, 2, 0);
 
     const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
