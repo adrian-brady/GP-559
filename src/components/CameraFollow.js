@@ -65,8 +65,9 @@ class CameraFollow extends Component {
       const isMoving = playerController.movementState === MovementState.MOVING;
       const isGrounded =
         playerController.groundingState === GroundingState.GROUNDED;
+      const isNotProne = playerController.stanceState !== StanceState.PRONE;
 
-      if (isMoving && isGrounded) {
+      if (isMoving && isGrounded && isNotProne) {
         this.bobbingTime += deltaTime * this.bobbingSpeed;
 
         const verticalBob = Math.sin(this.bobbingTime) * this.bobbingAmount;
