@@ -22,6 +22,7 @@ import RAPIER, { ColliderDesc } from '@dimforge/rapier3d-compat';
 import { RigidBody } from '../components/RigidBody.js';
 import { Entity } from '../ecs/Entity.js';
 import { Weapon } from '../components/Weapon.js';
+import { loadAK47 } from '../assets/models/WeaponModels.js';
 
 class MainScene extends GameScene {
   /** @type {PerspectiveCamera} */
@@ -32,7 +33,7 @@ class MainScene extends GameScene {
    * @param {PerspectiveCamera} camera
    * @param {RAPIER.World} physicsWorld
    */
-  initialize(camera, physicsWorld) {
+  async initialize(camera, physicsWorld) {
     this.camera = camera;
     this.physicsWorld = physicsWorld;
 
@@ -40,7 +41,7 @@ class MainScene extends GameScene {
     this.camera.lookAt(0, 0, 0);
 
     this.setupLighting();
-    this.setupPlayer();
+    await this.setupPlayer();
     this.setupEnvironment();
     this.setupObjects();
     this.scene.background = new Color('skyblue');
@@ -91,7 +92,7 @@ class MainScene extends GameScene {
     this.scene.add(directionalLight);
   }
 
-  setupPlayer() {
+  async setupPlayer() {
     const player = this.entityManager.createEntity(this.scene, 'player');
     // const geometry = new BoxGeometry(1, 1, 1);
     // const material = new MeshStandardMaterial({ color: 0x00ff00 });
@@ -108,7 +109,8 @@ class MainScene extends GameScene {
 
     const colliderDesc = RAPIER.ColliderDesc.capsule(0.5, 0.5)
       .setFriction(0.5)
-      .setRestitution(0.0);
+      .setRestitution(0.0)
+      .setCollisionGroups(0x00010001);
 
     const collider = this.physicsWorld.createCollider(colliderDesc, rigidBody);
 
@@ -118,12 +120,21 @@ class MainScene extends GameScene {
     const cameraFollow = player.addComponent(CameraFollow, this.camera);
     cameraFollow.offset.set(0, 0.5, 0);
 
-    const weaponGeometry = new BoxGeometry(0.1, 0.1, 0.4);
-    const weaponMaterial = new MeshStandardMaterial({ color: 0x333333 });
-    const weaponMesh = new Mesh(weaponGeometry, weaponMaterial);
-    weaponMesh.castShadow = true;
+    let weaponModel;
+    try {
+      weaponModel = await loadAK47();
+      weaponModel.rotateY(Math.PI / 2);
+      weaponModel.translateY(-0.1);
+      weaponModel.translateX(-0.1);
+    } catch (error) {
+      console.error('Failed to load player weapon, using fallback:', error);
+      const weaponGeometry = new BoxGeometry(0.1, 0.1, 0.4);
+      const weaponMaterial = new MeshStandardMaterial({ color: 0x333333 });
+      weaponModel = new Mesh(weaponGeometry, weaponMaterial);
+      weaponModel.castShadow = true;
+    }
 
-    player.addComponent(Weapon, this.camera, weaponMesh);
+    player.addComponent(Weapon, this.camera, weaponModel);
   }
 
   setupEnvironment() {
@@ -140,7 +151,11 @@ class MainScene extends GameScene {
     ground.transform.rotateX(-Math.PI / 2);
     ground.transform.position.y = 0;
 
-    const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(0, 0, 0);
+    const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(
+      0,
+      -0.1,
+      0
+    );
 
     const rigidBody = this.physicsWorld.createRigidBody(rigidBodyDesc);
 

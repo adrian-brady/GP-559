@@ -27,7 +27,7 @@ class GameScene {
    * @param {PerspectiveCamera} camera
    * @param {World} world
    */
-  initialize(camera, world) {
+  async initialize(camera, world) {
     this.physicsWorld = physicsWorld;
   }
 }

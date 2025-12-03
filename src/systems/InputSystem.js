@@ -7,10 +7,15 @@ import { LeanLeftCommand } from '../input/commands/LeanLeftCommand.js';
 import { LeanRightCommand } from '../input/commands/LeanRightCommand.js';
 import { ReloadCommand } from '../input/commands/ReloadCommand.js';
 import { ProneCommand } from '../input/commands/ProneCommand.js';
+import { EntitySpawner } from './EntitySpawner.js';
+import { SpawnWeaponCommand } from '../input/commands/SpawnWeaponCommand.js';
 
 class InputSystem {
   /** @type {EntityManager} */
   entityManager;
+
+  /** @type {EntitySpawner} */
+  entitySpawner;
 
   /** @type {Object<string, boolean>} */
   keysPressed = {};
@@ -43,6 +48,14 @@ class InputSystem {
   constructor(entityManager, camera = null) {
     this.entityManager = entityManager;
     this.camera = camera;
+  }
+
+  /**
+   * Set the entity spawner
+   * @param {EntitySpawner} entitySpawner
+   */
+  setEntitySpawner(entitySpawner) {
+    this.entitySpawner = entitySpawner;
   }
 
   /**
@@ -161,16 +174,20 @@ class InputSystem {
       q: () => new LeanLeftCommand(),
       e: () => new LeanRightCommand(),
       r: () => new ReloadCommand(),
+      p: () =>
+        this.entitySpawner
+          ? new SpawnWeaponCommand(this.entitySpawner, this.camera, 'ak47')
+          : null,
     };
 
     const command = commands[key]?.();
     if (!command) return;
     console.log('command:', command);
 
-    this.entityManager.entities.forEach(entity => {
+    this.entityManager.entities.forEach(async entity => {
       const controller = entity.getComponent(PlayerController);
       if (controller) {
-        command.execute(controller);
+        await command.execute(controller);
       }
     });
   }

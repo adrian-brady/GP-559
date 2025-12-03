@@ -15,6 +15,7 @@ import {
 
 import RAPIER from '@dimforge/rapier3d-compat';
 import { PhysicsSystem } from '../systems/PhysicsSystem.js';
+import { EntitySpawner } from '../systems/EntitySpawner.js';
 
 /**
  * Main world/scene manager
@@ -47,6 +48,9 @@ class World {
   /** @type {InputSystem} */
   inputSystem;
 
+  /** @type {EntitySpawner} */
+  entitySpawner;
+
   /**
    * @param {HTMLElement} container
    * @param {typeof GameScene} SceneClass
@@ -56,6 +60,7 @@ class World {
     this.entityManager = new EntityManager(this.scene);
     this.container = container;
     this.currentScene = new SceneClass(this.scene, this.entityManager);
+    this.entitySpawner = null;
   }
 
   /**
@@ -70,9 +75,17 @@ class World {
     this.setupRenderer();
     this.setupCamera();
     this.onWindowResize();
+
+    this.entitySpawner = new EntitySpawner(
+      this.scene,
+      this.entityManager,
+      this.physicsWorld
+    );
+
+    this.inputSystem.setEntitySpawner(this.entitySpawner);
     this.inputSystem.initialize();
 
-    this.currentScene.initialize(this.camera, this.physicsWorld);
+    await this.currentScene.initialize(this.camera, this.physicsWorld);
 
     window.addEventListener('resize', () => this.onWindowResize());
 
