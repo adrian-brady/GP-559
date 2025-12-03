@@ -30,6 +30,12 @@ class WeaponDefinition {
       fire: {
         recoilAmount: config.animations?.fire?.recoilAmount || 0.1,
         recoilRecoverySpeed: config.animations?.fire?.recoilRecoverySpeed || 5,
+        recoilVariation: config.animations?.fire?.recoilVariation || 0.2,
+        horizontalRecoil: config.animations?.fire?.horizontalRecoil || 0.05,
+        horizontalVariation:
+          config.animations?.fire?.horizontalVariation || 0.5,
+        verticalRecoil: config.animations?.fire?.verticalRecoil || 0.08,
+        verticalVariation: config.animations?.fire?.verticalVariation || 0.3,
       },
     };
 
@@ -71,7 +77,12 @@ const WeaponDefinitions = {
       },
       fire: {
         recoilAmount: 0.12,
-        recoilRecoverySpeed: 6,
+        recoilRecoverySpeed: 1,
+        recoilVariation: 0.3,
+        horizontalRecoil: 0.05,
+        horizontalVariation: 0.8,
+        verticalRecoil: 0.08,
+        verticalVariation: 0.4,
       },
     },
     stats: {

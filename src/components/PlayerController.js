@@ -137,6 +137,13 @@ class PlayerController extends Component {
   }
 
   /**
+   * Called by FireCommand
+   */
+  handleFire() {
+    this.weaponController.handleFire();
+  }
+
+  /**
    * @returns {boolean}
    */
   isMoving() {

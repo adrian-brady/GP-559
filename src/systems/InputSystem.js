@@ -96,14 +96,18 @@ class InputSystem {
     });
 
     document.addEventListener('mousedown', e => {
-      if (e.button === 2) {
+      if (e.button === 1) {
         this.keysPressed['rightclick'] = true;
+      } else if (e.button === 0) {
+        this.keysPressed['leftclick'] = true;
       }
     });
 
     document.addEventListener('mouseup', e => {
-      if (e.button === 2) {
+      if (e.button === 1) {
         this.keysPressed['rightclick'] = false;
+      } else if (e.button === 0) {
+        this.keysPressed['leftclick'] = false;
       }
     });
 
@@ -119,6 +123,7 @@ class InputSystem {
     this.updateMouseLook();
     const movementInput = this.getMovementInput();
     const isAiming = this.keysPressed['rightclick'];
+    const isFiring = this.keysPressed['leftclick'];
 
     this.entityManager.entities.forEach(entity => {
       /** @type {PlayerController} */
@@ -132,6 +137,10 @@ class InputSystem {
           controller.handleAim();
         } else {
           controller.handleAimRelease();
+        }
+
+        if (isFiring) {
+          controller.handleFire();
         }
       }
     });

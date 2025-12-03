@@ -92,6 +92,17 @@ class WeaponController {
       this.player.weaponState = WeaponState.FOCUS_HIPFIRE;
     }
   }
+
+  handleFire() {
+    if (this.player.weaponState === WeaponState.RELOAD) {
+      return;
+    }
+
+    const weapon = this.player.entity.getComponent(Weapon);
+    if (weapon && weapon.canFire()) {
+      weapon.fire();
+    }
+  }
 }
 
 export { WeaponController };

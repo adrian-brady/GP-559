@@ -50,6 +50,13 @@ class Weapon extends Component {
   currentBobY = 0;
   currentBobRotZ = 0;
 
+  currentAmmo = 0;
+  lastFireTime = 0;
+
+  recoilKick = 0;
+  recoilHorizontal = 0;
+  recoilVertical = 0;
+
   /**
    *
    * @param {Entity} entity
@@ -73,8 +80,36 @@ class Weapon extends Component {
     );
     this.weaponGroup.add(weaponModel);
 
+    this.currentAmmo = definition.stats.magazineSize;
+
     this.camera.add(this.weaponGroup);
     this.originalOffset = { ...this.weaponOffset };
+  }
+
+  canFire() {
+    const now = Date.now() / 1000;
+    const timeSinceLastFire = now - this.lastFireTime;
+
+    return (
+      this.currentAmmo > 0 &&
+      timeSinceLastFire >= this.definition.stats.fireRate
+    );
+  }
+
+  fire() {
+    if (!this.canFire()) return;
+
+    this.currentAmmo--;
+    this.lastFireTime = Date.now() / 1000;
+
+    this.applyRecoil();
+
+    console.log(`Fired Round Ammo:
+    ${this.currentAmmo}/${this.definition.stats.magazineSize}`);
+
+    if (this.currentAmmo === 0) {
+      console.log('Magazine empty. Press R to reload');
+    }
   }
 
   /**
@@ -210,6 +245,7 @@ class Weapon extends Component {
 
   finishReload() {
     this.isReloading = false;
+    this.currentAmmo = this.definition.stats.magazineSize;
     this.reloadProgress = 0;
 
     Object.keys(this.parts).forEach(partType => {
@@ -235,7 +271,20 @@ class Weapon extends Component {
   }
 
   applyRecoil() {
-    this.recoilKick = this.definition.animations.fire.recoilAmount;
+    const fire = this.definition.animations.fire;
+
+    const baseRecoil = fire.recoilAmount;
+    const variation = fire.recoilVariation;
+    this.recoilKick = baseRecoil * (1 + (Math.random() - 0.5) * 2 * variation);
+
+    const horzBase = fire.horizontalRecoil;
+    const horzVar = fire.horizontalVariation;
+    this.recoilHorizontal =
+      horzBase * (Math.random() - 0.5) * 2 * (1 + horzVar);
+
+    const vertBase = fire.verticalRecoil;
+    const vertVar = fire.verticalVariation;
+    this.recoilVertical = vertBase * (1 + (Math.random() - 0.5) * 2 * vertVar);
   }
 
   updateRecoil(deltaTime) {
@@ -245,8 +294,13 @@ class Weapon extends Component {
     this.recoilKick -= deltaTime * recoverySpeed;
     if (this.recoilKick < 0) this.recoilKick = 0;
 
+    this.recoilHorizontal *= Math.exp(-recoverySpeed * deltaTime);
+    this.recoilVertical *= Math.exp(-recoverySpeed * deltaTime);
+
     this.weaponGroup.position.z = this.originalOffset.z + this.recoilKick;
-    this.weaponGroup.rotation.x = -0.15 * this.recoilKick;
+    this.weaponGroup.position.x = this.originalOffset.x + this.recoilHorizontal;
+    this.weaponGroup.rotation.x = -0.15 * this.recoilKick + this.recoilVertical;
+    15 * this.recoilKick;
   }
 
   /**
