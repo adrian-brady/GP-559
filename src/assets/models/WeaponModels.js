@@ -50,11 +50,11 @@ async function loadWeaponModel(modelPath) {
             child.receiveShadow = false;
 
             const debugColor = debugColors[meshIndex % debugColors.length];
-            child.material = new MeshStandardMaterial({
-              color: debugColor,
-              roughness: 0.7,
-              metalness: 0.3,
-            });
+            // child.material = new MeshStandardMaterial({
+            //   color: debugColor,
+            //   roughness: 0.7,
+            //   metalness: 0.3,
+            // });
 
             console.log(`  Color: ${debugColor.toString(16)} for
               ${child.name}`);
