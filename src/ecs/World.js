@@ -1,4 +1,10 @@
-import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import {
+  PCFShadowMap,
+  PCFSoftShadowMap,
+  PerspectiveCamera,
+  Scene,
+  WebGLRenderer,
+} from 'three';
 import { EntityManager } from '../managers/EntityManager.js';
 import { GameScene } from '../scenes/GameScene.js';
 import { InputSystem } from '../systems/InputSystem.js';
@@ -95,6 +101,8 @@ class World {
       this.container.clientWidth,
       this.container.clientHeight
     );
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.container.appendChild(this.renderer.domElement);
   }
 

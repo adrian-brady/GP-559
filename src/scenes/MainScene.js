@@ -76,6 +76,16 @@ class MainScene extends GameScene {
 
     const directionalLight = new DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(5, 10, 7);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 50;
+    directionalLight.shadow.camera.left = -20;
+    directionalLight.shadow.camera.right = 20;
+    directionalLight.shadow.camera.top = 20;
+    directionalLight.shadow.camera.bottom = -20;
+
     this.scene.add(directionalLight);
   }
 
@@ -114,7 +124,10 @@ class MainScene extends GameScene {
       color: 0x888888,
       side: DoubleSide,
     });
-    ground.addComponent(MeshInstance, geometry, material);
+    /** @type {MeshInstance} */
+    const meshInstance = ground.addComponent(MeshInstance, geometry, material);
+    meshInstance.mesh.receiveShadow = true;
+
     ground.transform.rotateX(-Math.PI / 2);
     ground.transform.position.y = 0;
 
@@ -139,7 +152,12 @@ class MainScene extends GameScene {
    */
   createPhysicsObject(name, geometry, material, position, colliderDesc) {
     const entity = this.entityManager.createEntity(this.scene, name);
-    entity.addComponent(MeshInstance, geometry, material);
+    /** @type {MeshInstance} */
+    const meshInstance = entity.addComponent(MeshInstance, geometry, material);
+
+    meshInstance.mesh.castShadow = true;
+    meshInstance.mesh.receiveShadow = true;
+
     entity.transform.position.set(position.x, position.y, position.z);
 
     const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(
