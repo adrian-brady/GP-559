@@ -48,8 +48,14 @@ class InputSystem {
    */
   initialize() {
     document.addEventListener('keydown', e => {
-      this.keysPressed[e.key.toLowerCase()] = true;
-      this.handleKeyDown(e.key.toLowerCase());
+      const key = e.key.toLowerCase();
+
+      // Only handle a key if not already pressed
+      if (!this.keysPressed[key]) {
+        this.handleKeyDown(key);
+      }
+
+      this.keysPressed[key] = true;
     });
 
     document.addEventListener('keyup', e => {

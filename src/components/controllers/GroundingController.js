@@ -11,6 +11,12 @@ class GroundingController {
   /** @type {PlayerController} */
   player;
 
+  /** @type {number} */
+  jumpCooldown = 0;
+
+  /** @type {number} */
+  jumpCooldownTime = 0.2;
+
   /**
    * @param {PlayerController} player
    */
@@ -23,6 +29,10 @@ class GroundingController {
    * @param {number} deltaTime
    */
   update(deltaTime) {
+    if (this.jumpCooldown > 0) {
+      this.jumpCooldown -= deltaTime;
+    }
+
     const rigidBody = this.player.entity.getComponent(RigidBody);
     if (!rigidBody) return;
 
@@ -36,6 +46,8 @@ class GroundingController {
   }
 
   handleJump() {
+    if (this.jumpCooldown > 0) return;
+
     if (this.player.groundingState !== GroundingState.GROUNDED) return;
 
     const rigidBody = this.player.entity.getComponent(RigidBody);
@@ -45,7 +57,8 @@ class GroundingController {
 
     this.player.groundingState = GroundingState.AIRBORNE;
     this.player.stanceController.forceStanding();
-    console.log('player grounding state:', this.player.groundingState);
+
+    this.jumpCooldown = this.jumpCooldownTime;
   }
 
   /**
