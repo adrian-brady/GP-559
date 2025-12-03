@@ -36,7 +36,7 @@ class GroundingController {
     const rigidBody = this.player.entity.getComponent(RigidBody);
     if (!rigidBody) return;
 
-    this.player.isGrounded = this.checkGrounded(rigidBody);
+    this.player.grounded = this.checkGrounded(rigidBody);
 
     if (this.player.isGrounded) {
       this.player.groundingState = GroundingState.GROUNDED;

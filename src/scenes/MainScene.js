@@ -12,6 +12,7 @@ import {
   BufferGeometry,
   Material,
   Vector3,
+  Mesh,
 } from 'three';
 import { GameScene } from './GameScene.js';
 import { MeshInstance } from '../components/MeshInstance.js';
@@ -20,6 +21,7 @@ import { CameraFollow } from '../components/CameraFollow.js';
 import RAPIER, { ColliderDesc } from '@dimforge/rapier3d-compat';
 import { RigidBody } from '../components/RigidBody.js';
 import { Entity } from '../ecs/Entity.js';
+import { Weapon } from '../components/Weapon.js';
 
 class MainScene extends GameScene {
   /** @type {PerspectiveCamera} */
@@ -115,6 +117,13 @@ class MainScene extends GameScene {
     player.addComponent(PlayerController, this.physicsWorld);
     const cameraFollow = player.addComponent(CameraFollow, this.camera);
     cameraFollow.offset.set(0, 0.5, 0);
+
+    const weaponGeometry = new BoxGeometry(0.1, 0.1, 0.4);
+    const weaponMaterial = new MeshStandardMaterial({ color: 0x333333 });
+    const weaponMesh = new Mesh(weaponGeometry, weaponMaterial);
+    weaponMesh.castShadow = true;
+
+    player.addComponent(Weapon, this.camera, weaponMesh);
   }
 
   setupEnvironment() {

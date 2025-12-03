@@ -112,9 +112,10 @@ class World {
   setupCamera() {
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
-    this.camera = new PerspectiveCamera(90, width / height, 0.1, 1000);
+    this.camera = new PerspectiveCamera(90, width / height, 0.01, 1000);
     this.camera.position.z = 5;
     this.inputSystem = new InputSystem(this.entityManager, this.camera);
+    this.scene.add(this.camera);
   }
 
   /**

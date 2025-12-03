@@ -28,7 +28,7 @@ class PlayerController extends Component {
   gravity = 9.81;
 
   /** @type {boolean} */
-  isGrounded = true;
+  grounded = true;
 
   /** @type {PlayerState[]} */
   stateStack = [];
@@ -134,6 +134,97 @@ class PlayerController extends Component {
    */
   handleReload() {
     this.weaponController.handleReload();
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isMoving() {
+    return this.movementState === MovementState.MOVING;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isGrounded() {
+    return this.groundingState === GroundingState.GROUNDED;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isCrouching() {
+    return this.stanceState === StanceState.CROUCHING;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isProne() {
+    return this.stanceState === StanceState.PRONE;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isAirborne() {
+    return this.groundingState === GroundingState.AIRBORNE;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isStanding() {
+    return this.stanceState === StanceState.STANDING;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isLeaning() {
+    return this.leanState !== LeanState.NONE;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isLeaningLeft() {
+    return this.leanState === LeanState.LEFT;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isLeaningRight() {
+    return this.leanState === LeanState.RIGHT;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isHipfire() {
+    return this.weaponState === WeaponState.HIPFIRE;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isADS() {
+    return this.weaponState === WeaponState.ADS;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isFocusHipfire() {
+    return this.weaponState === WeaponState.FOCUS_HIPFIRE;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isReloading() {
+    return this.weaponState === WeaponState.RELOAD;
   }
 
   /**
