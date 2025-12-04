@@ -1,4 +1,4 @@
-import { Group, Mesh, PerspectiveCamera } from 'three';
+import { Group, Mesh, PerspectiveCamera, Vector3 } from 'three';
 import { Component } from '../ecs/Component.js';
 import { CameraFollow } from './CameraFollow.js';
 import { PlayerController } from './PlayerController.js';
@@ -40,10 +40,10 @@ class Weapon extends Component {
   lastCameraBob = { x: 0, y: 0 };
 
   bobbingTime = 0;
-  bobbingSpeed = 10;
+  bobbingSpeed = 4;
   bobbingAmount = 0.01;
-  bobbingHorizontal = 0.0075;
-  bobbingRotation = 0.025;
+  bobbingHorizontal = 0.01;
+  bobbingRotation = 0.01;
   bobbingLerpSpeed = 8;
 
   currentBobX = 0;
@@ -56,6 +56,10 @@ class Weapon extends Component {
   recoilKick = 0;
   recoilHorizontal = 0;
   recoilVertical = 0;
+
+  adsProgress = 0;
+  sightAlignmentOffset = { x: 0, y: 0, z: 0 };
+  isSightAlignmentCalculated = false;
 
   /**
    *
@@ -84,6 +88,15 @@ class Weapon extends Component {
 
     this.camera.add(this.weaponGroup);
     this.originalOffset = { ...this.weaponOffset };
+
+    if (definition.ads.sightNode) {
+      weaponModel.traverse(child => {
+        if (child.name === definition.ads.sightNode) {
+          this.parts.sight = child;
+          console.log('Found ADS sight:', child.name);
+        }
+      });
+    }
   }
 
   canFire() {
@@ -298,6 +311,8 @@ class Weapon extends Component {
     const playerController = this.entity.getComponent(PlayerController);
     if (!playerController) return;
 
+    this.updateADS(deltaTime, playerController.isADS());
+
     let currentCameraBobX = 0;
     let currentCameraBobY = 0;
 
@@ -305,7 +320,8 @@ class Weapon extends Component {
       cameraFollow.bobbingEnabled &&
       playerController.isMoving() &&
       playerController.isGrounded() &&
-      !playerController.isProne()
+      !playerController.isProne() &&
+      !playerController.isADS()
     ) {
       currentCameraBobY =
         Math.sin(cameraFollow.bobbingTime) * cameraFollow.bobbingAmount;
@@ -343,9 +359,95 @@ class Weapon extends Component {
   }
 
   /**
+   * Calculate the offset needed to align sight with camera center
+   * This calcualtion is performed once and then cached.
+   */
+  calculateSightAlignment() {
+    const sightPart = this.parts.sight;
+
+    if (!sightPart) {
+      console.warn('No sight part found, using generic ADS offset');
+      this.sightAlignmentOffset = { x: 0, y: -0.15, z: -0.35 };
+      return;
+    }
+
+    const sightLocalPos = new Vector3();
+    sightPart.getWorldPosition(sightLocalPos);
+    this.weaponGroup.worldToLocal(sightLocalPos);
+
+    this.sightAlignmentOffset = {
+      x: -sightLocalPos.x,
+      y: -sightLocalPos.y,
+      z: -sightLocalPos.z,
+    };
+
+    const adj = this.definition.ads.offsetAdjustment;
+    this.sightAlignmentOffset.x += adj.x;
+    this.sightAlignmentOffset.y += adj.y;
+    this.sightAlignmentOffset.z += adj.z;
+
+    console.log('Sight alignment calculated:', this.sightAlignmentOffset);
+  }
+
+  /**
+   * Update ADS state
+   * @param {number} deltaTime
+   * @param {boolean} isADS - If player is in ADS state or not
+   */
+  updateADS(deltaTime, isADS) {
+    const targetProgress = isADS ? 1 : 0;
+
+    if (targetProgress > 0 && !this.isSightAlignmentCalculated) {
+      this.calculateSightAlignment();
+      this.isSightAlignmentCalculated = true;
+    }
+
+    const speed = this.definition.ads.transitionSpeed;
+    const lerpFactor = 1 - Math.exp(-speed * deltaTime);
+    this.adsProgress += (targetProgress - this.adsProgress) * lerpFactor;
+
+    this.weaponOffset.x = this.lerp(
+      this.originalOffset.x,
+      this.sightAlignmentOffset.x,
+      this.adsProgress
+    );
+    this.weaponOffset.y = this.lerp(
+      this.originalOffset.y,
+      this.sightAlignmentOffset.y,
+      this.adsProgress
+    );
+    this.weaponOffset.z = this.lerp(
+      this.originalOffset.z,
+      this.sightAlignmentOffset.z,
+      this.adsProgress
+    );
+
+    // const targetFOV = this.lerp(
+    //   this.definition.ads.hipfireFOV,
+    //   this.definition.ads.adsFOV,
+    //   this.adsProgress
+    // );
+    // this.camera.fov += (targetFOV - this.camera.fov) * lerpFactor;
+    // this.camera.updateProjectionMatrix();
+  }
+
+  /**
+   * Linear interpolation helper
+   * @param {number} start
+   * @param {number} end
+   * @param {number} t
+   */
+  lerp(start, end, t) {
+    return start + (end - start) * t;
+  }
+
+  /**
    * Cleanup
    */
   destroy() {
+    this.camera.remove(this.weaponGroup);
+    this.camera.updateProjectionMatrix();
+
     this.camera.remove(this.weaponGroup);
   }
 }

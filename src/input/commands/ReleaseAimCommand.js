@@ -6,7 +6,7 @@ class ReleaseAimCommand extends Command {
    * @param {PlayerController} controller
    */
   execute(controller) {
-    controller.handleAim();
+    controller.handleAimRelease();
   }
 }
 

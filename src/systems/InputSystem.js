@@ -9,6 +9,9 @@ import { ReloadCommand } from '../input/commands/ReloadCommand.js';
 import { ProneCommand } from '../input/commands/ProneCommand.js';
 import { EntitySpawner } from './EntitySpawner.js';
 import { SpawnWeaponCommand } from '../input/commands/SpawnWeaponCommand.js';
+import { FireCommand } from '../input/commands/FireCommand.js';
+import { AimCommand } from '../input/commands/AimCommand.js';
+import { ReleaseAimCommand } from '../input/commands/ReleaseAimCommand.js';
 
 class InputSystem {
   /** @type {EntityManager} */
@@ -19,6 +22,9 @@ class InputSystem {
 
   /** @type {Object<string, boolean>} */
   keysPressed = {};
+
+  /** @type {Object<string, boolean>} */
+  keysPressedPrevious = {};
 
   /** @type {number} */
   mouseX = 0;
@@ -40,6 +46,22 @@ class InputSystem {
 
   /** @type {PerspectiveCamera} */
   camera = null;
+
+  keyBindings = {
+    ' ': { command: JumpCommand, continuous: false },
+    c: { command: CrouchCommand, continuous: false },
+    x: { command: ProneCommand, continuous: false },
+    q: { command: LeanLeftCommand, continuous: false },
+    e: { command: LeanRightCommand, continuous: false },
+    r: { command: ReloadCommand, continuous: false },
+    rightclick: {
+      command: AimCommand,
+      continuous: true,
+      edgeDetect: true,
+      releaseCommand: ReleaseAimCommand,
+    },
+    leftclick: { command: FireCommand, continuous: true },
+  };
 
   /**
    * @param {EntityManager} entityManager
@@ -74,7 +96,9 @@ class InputSystem {
     });
 
     document.addEventListener('keyup', e => {
-      this.keysPressed[e.key.toLowerCase()] = false;
+      const key = e.key.toLowerCase();
+      this.handleKeyUp(key);
+      this.keysPressed[key] = false;
     });
 
     // Request pointer lock on click
@@ -96,7 +120,8 @@ class InputSystem {
     });
 
     document.addEventListener('mousedown', e => {
-      if (e.button === 1) {
+      console.log('event:', e);
+      if (e.button === 2) {
         this.keysPressed['rightclick'] = true;
       } else if (e.button === 0) {
         this.keysPressed['leftclick'] = true;
@@ -104,9 +129,11 @@ class InputSystem {
     });
 
     document.addEventListener('mouseup', e => {
-      if (e.button === 1) {
+      if (e.button === 2) {
+        this.handleKeyUp('rightclick');
         this.keysPressed['rightclick'] = false;
       } else if (e.button === 0) {
+        this.handleKeyUp('leftclick');
         this.keysPressed['leftclick'] = false;
       }
     });
@@ -122,28 +149,40 @@ class InputSystem {
   update() {
     this.updateMouseLook();
     const movementInput = this.getMovementInput();
-    const isAiming = this.keysPressed['rightclick'];
-    const isFiring = this.keysPressed['leftclick'];
 
     this.entityManager.entities.forEach(entity => {
       /** @type {PlayerController} */
       const controller = entity.getComponent(PlayerController);
-      if (controller) {
-        if (movementInput.length() > 0) {
-          new MoveCommand(movementInput).execute(controller);
-        }
+      if (!controller) return;
 
-        if (isAiming) {
-          controller.handleAim();
-        } else {
-          controller.handleAimRelease();
-        }
+      if (movementInput.length() > 0) {
+        new MoveCommand(movementInput).execute(controller);
+      }
 
-        if (isFiring) {
-          controller.handleFire();
+      for (const [key, binding] of Object.entries(this.keyBindings)) {
+        const isPressed = this.keysPressed[key];
+        const wasPressed = this.keysPressedPrevious[key];
+        if (binding.edgeDetect) {
+          if (isPressed && !wasPressed) {
+            const command = new binding.command();
+            console.log('executing command:', command);
+            command.execute(controller);
+          } else if (!isPressed && wasPressed) {
+            if (binding.releaseCommand) {
+              const command = new binding.releaseCommand();
+              console.log('executing command:', command);
+              command.execute(controller);
+            }
+          }
+        } else if (binding.continuous && isPressed) {
+          const command = new binding.command();
+          console.log('executing command:', command);
+          command.execute(controller);
         }
       }
     });
+
+    this.keysPressedPrevious = { ...this.keysPressed };
   }
 
   /**
@@ -173,25 +212,39 @@ class InputSystem {
   }
 
   /**
+   * Handle key release
+   * @param {string} key
+   */
+  handleKeyUp(key) {
+    const binding = this.keyBindings[key];
+    if (!binding || !binding.releaseCommand) return;
+
+    const command = new binding.releaseCommand();
+
+    this.entityManager.entities.forEach(entity => {
+      /** @type {PlayerController} */
+      const controller = entity.getComponent(PlayerController);
+      if (controller) {
+        command.execute(controller);
+      }
+    });
+  }
+
+  /**
    * @param {string} key
    */
   handleKeyDown(key) {
-    const commands = {
-      ' ': () => new JumpCommand(),
-      c: () => new CrouchCommand(),
-      x: () => new ProneCommand(),
-      q: () => new LeanLeftCommand(),
-      e: () => new LeanRightCommand(),
-      r: () => new ReloadCommand(),
-      p: () =>
-        this.entitySpawner
-          ? new SpawnWeaponCommand(this.entitySpawner, this.camera, 'ak47')
-          : null,
-    };
+    const binding = this.keyBindings[key];
+    if (!binding) return;
 
-    const command = commands[key]?.();
+    let command;
+    if (key === 'p' && this.entitySpawner) {
+      command = new SpawnWeaponCommand(this.entitySpawner, this.camera, 'ak47');
+    } else {
+      command = new binding.command();
+    }
+
     if (!command) return;
-    console.log('command:', command);
 
     this.entityManager.entities.forEach(async entity => {
       const controller = entity.getComponent(PlayerController);

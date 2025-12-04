@@ -14,6 +14,10 @@ class CameraFollow extends Component {
   /** @type {Vector3} */
   offset;
 
+  baseFOV = 75;
+  currentFOV = 75;
+  adsFOVReduction = 20;
+
   bobbingEnabled = true;
   bobbingSpeed = 10.0;
   bobbingAmount = 0.05;
@@ -35,6 +39,22 @@ class CameraFollow extends Component {
     super(entity);
     this.camera = camera;
     this.offset = new Vector3(0, 0, 0);
+
+    this.baseFOV = camera.fov;
+    this.currentFOV = camera.fov;
+  }
+
+  /**
+   * Update FOV based on ADS state
+   */
+  updateFOV(deltaTime, isADS, targetFOVReduction, transitionSpeed) {
+    const targetFOV = isADS ? this.baseFOV - targetFOVReduction : this.baseFOV;
+
+    const lerpFactor = 1 - Math.exp(-transitionSpeed * deltaTime);
+    this.currentFOV += (targetFOV - this.currentFOV) * lerpFactor;
+
+    this.camera.fov = this.currentFOV;
+    this.camera.updateProjectionMatrix();
   }
 
   /** Tick forward this component */

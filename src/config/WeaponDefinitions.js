@@ -11,6 +11,18 @@ class WeaponDefinition {
       trigger: config.parts?.trigger || null,
     };
 
+    this.ads = {
+      sightNode: config.ads?.sightNode || config.parts?.sights || null,
+      transitionSpeed: config.ads?.transitionSpeed || 10,
+      offsetAdjustment: {
+        x: config.ads?.offsetAdjustment?.x || 0,
+        y: config.ads?.offsetAdjustment?.y || 0.02,
+        z: config.ads?.offsetAdjustment?.z || 0,
+      },
+      fovReduction: 25,
+      bobbingMultiplier: config.ads?.bobbingMultiplier || 0.2,
+    };
+
     this.animations = {
       reload: {
         duration: config.animations?.reload?.duration || 2.0,
@@ -59,6 +71,12 @@ const WeaponDefinitions = {
       stock: 'Weapon_02_7',
       sights: 'Weapon_02_5',
     },
+    ads: {
+      sightNode: 'Weapon_02_5',
+      transitionSpeed: 8,
+      fovReduction: 25,
+      offsetAdjustment: { x: 0, y: -0.15, z: -2 },
+    },
     animations: {
       reload: {
         duration: 2.5,
@@ -87,7 +105,7 @@ const WeaponDefinitions = {
     },
     stats: {
       damage: 35,
-      fireRate: 0.1,
+      fireRate: 0.15,
       magazineSize: 30,
       reloadTime: 2.5,
     },
