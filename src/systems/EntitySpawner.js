@@ -6,6 +6,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import { RigidBody } from '../components/RigidBody.js';
 import { createAK47, loadAK47 } from '../assets/models/WeaponModels.js';
 import { ModelInstance } from '../components/ModelInstance.js';
+import { DecalSystem } from './DecalSystem.js';
 
 class EntitySpawner {
   /** @type {Scene} */
@@ -22,8 +23,9 @@ class EntitySpawner {
    * @param {Scene} scene
    * @param {EntityManager} entityManager
    * @param {RAPIER.World} physicsWorld
+   * @param {DecalSystem} decalSystem
    */
-  constructor(scene, entityManager, physicsWorld) {
+  constructor(scene, entityManager, physicsWorld, decalSystem) {
     this.scene = scene;
     this.entityManager = entityManager;
     this.physicsWorld = physicsWorld;

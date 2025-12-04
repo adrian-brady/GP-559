@@ -22,8 +22,13 @@ class PhysicsSystem {
     this.world.step();
 
     entityManager.entities.forEach(entity => {
+      /** @type {RigidBody} */
       const rigidBody = entity.getComponent(RigidBody);
       if (!rigidBody) {
+        return;
+      }
+
+      if (rigidBody.body.isFixed()) {
         return;
       }
 

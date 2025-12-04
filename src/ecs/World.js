@@ -16,6 +16,7 @@ import {
 import RAPIER from '@dimforge/rapier3d-compat';
 import { PhysicsSystem } from '../systems/PhysicsSystem.js';
 import { EntitySpawner } from '../systems/EntitySpawner.js';
+import { DecalSystem } from '../systems/DecalSystem.js';
 
 /**
  * Main world/scene manager
@@ -51,6 +52,9 @@ class World {
   /** @type {EntitySpawner} */
   entitySpawner;
 
+  /** @type {DecalSystem} */
+  decalSystem;
+
   /**
    * @param {HTMLElement} container
    * @param {typeof GameScene} SceneClass
@@ -72,6 +76,8 @@ class World {
     this.physicsWorld = new RapierWorld(gravity);
     this.physicsSystem = new PhysicsSystem(this.physicsWorld);
 
+    this.decalSystem = new DecalSystem(this.scene);
+
     this.setupRenderer();
     this.setupCamera();
     this.onWindowResize();
@@ -79,13 +85,18 @@ class World {
     this.entitySpawner = new EntitySpawner(
       this.scene,
       this.entityManager,
-      this.physicsWorld
+      this.physicsWorld,
+      this.decalSystem
     );
 
     this.inputSystem.setEntitySpawner(this.entitySpawner);
     this.inputSystem.initialize();
 
-    await this.currentScene.initialize(this.camera, this.physicsWorld);
+    await this.currentScene.initialize(
+      this.camera,
+      this.physicsWorld,
+      this.decalSystem
+    );
 
     window.addEventListener('resize', () => this.onWindowResize());
 
@@ -148,8 +159,8 @@ class World {
    */
   update(deltaTime) {
     this.inputSystem.update();
-
     this.physicsSystem.update(this.entityManager, deltaTime);
+    this.decalSystem.update(deltaTime);
 
     this.entityManager.entities.forEach(entity => {
       entity.update(deltaTime);

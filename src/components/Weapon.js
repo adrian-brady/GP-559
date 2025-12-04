@@ -1,9 +1,13 @@
-import { Group, Mesh, PerspectiveCamera, Vector3 } from 'three';
+import { Group, Mesh, Object3D, PerspectiveCamera, Vector3 } from 'three';
 import { Component } from '../ecs/Component.js';
 import { CameraFollow } from './CameraFollow.js';
 import { PlayerController } from './PlayerController.js';
 import { WeaponDefinition } from '../config/WeaponDefinitions.js';
 import { Entity } from '../ecs/Entity.js';
+import RAPIER from '@dimforge/rapier3d-compat';
+import { DecalSystem } from '../systems/DecalSystem.js';
+import { RigidBody } from './RigidBody.js';
+import { MeshInstance } from './MeshInstance.js';
 
 class Weapon extends Component {
   /** @type {PerspectiveCamera} */
@@ -17,6 +21,12 @@ class Weapon extends Component {
 
   /** @type {WeaponDefinition} */
   definition;
+
+  /** @type {RAPIER.World} */
+  physicsWorld;
+
+  /** @type {DecalSystem} */
+  decalSystem;
 
   parts = {
     magazine: null,
@@ -67,12 +77,23 @@ class Weapon extends Component {
    * @param {PerspectiveCamera} camera
    * @param {Group} weaponModel
    * @param {WeaponDefinition} definition
+   * @param {RAPIER.World} physicsWorld
+   * @param {DecalSystem} decalSystem
    */
-  constructor(entity, camera, weaponModel, definition) {
+  constructor(
+    entity,
+    camera,
+    weaponModel,
+    definition,
+    physicsWorld,
+    decalSystem
+  ) {
     super(entity);
     this.camera = camera;
     this.weaponMesh = weaponModel;
     this.definition = definition;
+    this.physicsWorld = physicsWorld;
+    this.decalSystem = decalSystem;
 
     this.findWeaponParts(weaponModel);
 
@@ -115,6 +136,19 @@ class Weapon extends Component {
     this.currentAmmo--;
     this.lastFireTime = Date.now() / 1000;
 
+    const ray = this.performRaycast();
+
+    if (ray && ray.hit) {
+      this.decalSystem.addDecal(
+        ray.position,
+        ray.normal,
+        ray.hitObject,
+        ray.surfaceType
+      );
+
+      console.log('Hit:', ray.surfaceType, 'at', ray.position);
+    }
+
     this.applyRecoil();
 
     console.log(`Fired Round Ammo:
@@ -123,6 +157,82 @@ class Weapon extends Component {
     if (this.currentAmmo === 0) {
       console.log('Magazine empty. Press R to reload');
     }
+  }
+
+  /**
+   * Perform raycast from the camera forward
+   * @returns {{hit: boolean, position: Vector3, normal: Vector3} | null}
+   */
+  performRaycast() {
+    if (!this.physicsWorld) return null;
+
+    const origin = this.camera.getWorldPosition(new Vector3());
+    const direction = this.camera.getWorldDirection(new Vector3());
+
+    const ray = new RAPIER.Ray(origin, direction);
+    const maxDistance = 1000;
+    const solid = true;
+
+    /** @type {RigidBody} */
+    const playerRigidBody = this.entity.getComponent(RigidBody);
+    const excludeCollider = playerRigidBody
+      ? playerRigidBody.collider
+      : undefined;
+
+    const hit = this.physicsWorld.castRayAndGetNormal(
+      ray,
+      maxDistance,
+      solid,
+      null,
+      null,
+      null,
+      excludeCollider
+    );
+
+    if (hit) {
+      const hitPoint = ray.pointAt(hit.timeOfImpact);
+      const normal = new Vector3(hit.normal.x, hit.normal.y, hit.normal.z);
+
+      const collider = hit.collider;
+      const hitInfo = this.identifyHitObject(collider);
+
+      return {
+        hit: true,
+        position: new Vector3(hitPoint.x, hitPoint.y, hitPoint.z),
+        normal: new Vector3(normal.x, normal.y, normal.z),
+        collider: collider,
+        hitObject: hitInfo.object,
+        surfaceType: hitInfo.type,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Identity what Three.js object was hit and its type
+   * @param {RAPIER.Collider} collider
+   * @returns {{object: Object3D | null, type: string}}
+   */
+  identifyHitObject(collider) {
+    const userData = collider.userData;
+
+    if (!userData || !userData.entity) {
+      return { object: null, type: 'static' };
+    }
+
+    // Don't add decals to entities (players, AI)
+    if (userData.type === 'entity') {
+      return { object: null, type: 'entity' };
+    }
+
+    // Get the mesh from the entity
+    const meshInstance = userData.entity.getComponent(MeshInstance);
+    if (meshInstance) {
+      return { object: meshInstance.mesh, type: userData.type };
+    }
+
+    return { object: null, type: 'static' };
   }
 
   /**

@@ -24,19 +24,28 @@ import { Entity } from '../ecs/Entity.js';
 import { Weapon } from '../components/Weapon.js';
 import { loadAK47, loadWeaponModel } from '../assets/models/WeaponModels.js';
 import { WeaponDefinitions } from '../config/WeaponDefinitions.js';
+import { DecalSystem } from '../systems/DecalSystem.js';
 
 class MainScene extends GameScene {
   /** @type {PerspectiveCamera} */
   camera;
 
+  /** @type {RAPIER.World} */
+  physicsWorld;
+
+  /** @type {DecalSystem} */
+  decalSystem;
+
   /**
    * Sets up the Scene
    * @param {PerspectiveCamera} camera
    * @param {RAPIER.World} physicsWorld
+   * @param {DecalSystem} decalSystem
    */
-  async initialize(camera, physicsWorld) {
+  async initialize(camera, physicsWorld, decalSystem) {
     this.camera = camera;
     this.physicsWorld = physicsWorld;
+    this.decalSystem = decalSystem;
 
     this.camera.position.set(0, 5, 10);
     this.camera.lookAt(0, 0, 0);
@@ -114,6 +123,7 @@ class MainScene extends GameScene {
       .setCollisionGroups(0x00010001);
 
     const collider = this.physicsWorld.createCollider(colliderDesc, rigidBody);
+    collider.userData = { entity: player, type: 'entity' };
 
     player.addComponent(RigidBody, rigidBody, collider);
 
@@ -137,7 +147,14 @@ class MainScene extends GameScene {
       weaponModel.castShadow = true;
     }
 
-    player.addComponent(Weapon, this.camera, weaponModel, weaponDef);
+    player.addComponent(
+      Weapon,
+      this.camera,
+      weaponModel,
+      weaponDef,
+      this.physicsWorld,
+      this.decalSystem
+    );
   }
 
   setupEnvironment() {
@@ -164,8 +181,9 @@ class MainScene extends GameScene {
 
     const colliderDesc = RAPIER.ColliderDesc.cuboid(50, 0.1, 50);
     const collider = this.physicsWorld.createCollider(colliderDesc, rigidBody);
+    collider.userData = { entity: ground, type: 'static' };
 
-    // ground.addComponent(RigidBody, rigidBody, collider);
+    ground.addComponent(RigidBody, rigidBody, collider);
   }
 
   /**
@@ -193,7 +211,8 @@ class MainScene extends GameScene {
       position.z
     );
     const rigidBody = this.physicsWorld.createRigidBody(rigidBodyDesc);
-    this.physicsWorld.createCollider(colliderDesc, rigidBody);
+    const collider = this.physicsWorld.createCollider(colliderDesc, rigidBody);
+    collider.userData = { entity: entity, type: 'static' };
 
     return entity;
   }
