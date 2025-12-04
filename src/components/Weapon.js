@@ -51,8 +51,8 @@ class Weapon extends Component {
   reloadProgress = 0;
   recoilKick = 0;
 
-  bobFrequency = 0.01;
-  bobAmount = 0.3;
+  bobFrequency = 0.02;
+  bobAmount = 0.2;
   bobSpeed = 5.0;
   idleBobFreqDivider = 2.0;
   bobBasePosition = { x: 0, y: 0 };
@@ -519,9 +519,8 @@ class Weapon extends Component {
       console.warn('velocity not defined on player controller');
       return;
     }
-    const velocityMagnitude = Math.sqrt(
-      velocity.x * velocity.y + velocity.z * velocity.z
-    );
+
+    const velocityMagnitude = velocity.length();
 
     const inputDirection = playerController.inputDirection;
 
