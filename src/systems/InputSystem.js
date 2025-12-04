@@ -92,10 +92,13 @@ class InputSystem {
     document.addEventListener('keydown', e => {
       const key = e.key.toLowerCase();
 
-      if (key === 'escape') {
-        this.menuManager.toggleMenu();
-        return;
-      }
+      // if (key === 'escape') {
+      //   this.menuManager.toggleMenu();
+      //   if (this.menuManager.isMenuOpen) {
+      //     document.exitPointerLock();
+      //   }
+      //   return;
+      // }
 
       if (this.menuManager.isPaused) return;
 
@@ -122,7 +125,22 @@ class InputSystem {
 
     // Handle pointer lock change
     document.addEventListener('pointerlockchange', () => {
+      const wasLocked = this.isPointerLocked;
       this.isPointerLocked = document.pointerLockElement !== null;
+
+      // If pointer lock was just released and menu isn't already open, open it
+      if (
+        wasLocked &&
+        !this.isPointerLocked &&
+        !this.menuManager.isMenuOpen &&
+        !this.menuManager.isPaused
+      ) {
+        setTimeout(() => {
+          if (!this.isPointerLocked && !this.menuManager.isMenuOpen) {
+            this.menuManager.openMenu();
+          }
+        }, 50);
+      }
     });
 
     // Track mouse movement
