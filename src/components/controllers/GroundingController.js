@@ -53,6 +53,16 @@ class GroundingController {
     const rigidBody = this.player.entity.getComponent(RigidBody);
     if (!rigidBody) return;
 
+    const currentVel = rigidBody.body.linvel();
+    rigidBody.body.setLinvel(
+      {
+        x: currentVel.x * 0.5,
+        y: currentVel.y,
+        z: currentVel.z * 0.5,
+      },
+      true
+    );
+
     rigidBody.body.applyImpulse({ x: 0, y: this.player.jumpForce, z: 0 }, true);
 
     this.player.groundingState = GroundingState.AIRBORNE;

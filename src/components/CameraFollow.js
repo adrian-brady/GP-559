@@ -19,7 +19,7 @@ class CameraFollow extends Component {
   adsFOVReduction = 20;
 
   bobbingEnabled = true;
-  bobbingSpeed = 10.0;
+  bobbingSpeed = 8;
   bobbingAmount = 0.05;
   bobbingHorizontal = 0.03;
   bobbingTime = 0;

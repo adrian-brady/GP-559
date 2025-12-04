@@ -117,7 +117,7 @@ class MainScene extends GameScene {
 
     const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
       .setTranslation(0, 2, 0)
-      .setLinearDamping(5.0)
+      .setLinearDamping(0.5)
       .setAngularDamping(10.0)
       .lockRotations();
 

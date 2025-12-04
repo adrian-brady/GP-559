@@ -38,12 +38,28 @@ class MovementController {
       speed *= this.getStanceSpeedModifier();
       speed *= this.getAimingSpeedModifier();
 
+      const targetVelocity = new Vector3(
+        this.movementDirection.x * speed,
+        0,
+        this.movementDirection.z * speed
+      );
+
       const currentVel = rigidBody.body.linvel();
+      const currentHorizontal = new Vector3(currentVel.x, 0, currentVel.z);
+
+      let acceleration = this.player.isGrounded() ? 8.0 : 0.5;
+
+      const newHorizontal = new Vector3().lerpVectors(
+        currentHorizontal,
+        targetVelocity,
+        acceleration * deltaTime
+      );
+
       rigidBody.body.setLinvel(
         {
-          x: this.movementDirection.x * speed,
+          x: newHorizontal.x,
           y: currentVel.y,
-          z: this.movementDirection.z * speed,
+          z: newHorizontal.z,
         },
         true
       );
@@ -51,11 +67,18 @@ class MovementController {
       this.player.movementState = MovementState.IDLE;
 
       const currentVel = rigidBody.body.linvel();
+      const currentHorizontal = new Vector3(currentVel.x, 0, currentVel.z);
+      let deceleration = this.player.isGrounded() ? 6.0 : 2.0;
+
+      const newHorizontal = currentHorizontal.lerp(
+        new Vector3(0, 0, 0),
+        deceleration * deltaTime
+      );
       rigidBody.body.setLinvel(
         {
-          x: 0,
+          x: newHorizontal.x,
           y: currentVel.y,
-          z: 0,
+          z: newHorizontal.z,
         },
         true
       );
