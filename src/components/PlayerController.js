@@ -119,6 +119,7 @@ class PlayerController extends Component {
    * Called by AimCommand
    */
   handleAim() {
+    console.log('Aiming');
     this.weaponController.handleAim();
   }
 
@@ -126,6 +127,8 @@ class PlayerController extends Component {
    * Called by ReleaseAimCommand
    */
   handleAimRelease() {
+    console.log('Aim released');
+    console.trace();
     this.weaponController.handleAimRelease();
   }
 

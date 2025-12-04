@@ -6,6 +6,7 @@ class AimCommand extends Command {
    * @param {PlayerController} controller
    */
   execute(controller) {
+    console.log('executing handleAim');
     controller.handleAim();
   }
 }

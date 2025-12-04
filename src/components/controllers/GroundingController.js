@@ -86,7 +86,6 @@ class GroundingController {
       undefined,
       rigidBody.collider
     );
-    console.log('hit:', hit !== null);
 
     return hit !== null;
   }

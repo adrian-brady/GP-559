@@ -55,7 +55,7 @@ class WeaponController {
    */
   handleAim() {
     if (this.player.weaponState !== WeaponState.RELOAD) {
-      this.isAiming = true;
+      this.isAiming = !this.isAiming;
     }
   }
 

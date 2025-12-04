@@ -1,73 +1,235 @@
 body {
-    /* remove margins and scroll bars */
-    margin: 0;
-    overflow: hidden;
+  /* remove margins and scroll bars */
+  margin: 0;
+  overflow: hidden;
 
-    /* style text */
-    text-align: center;
-    font-size: 12px;
-    font-family: Sans-Serif;
+  /* style text */
+  text-align: center;
+  font-size: 12px;
+  font-family: Sans-Serif;
 
-    /* color text */
-    color: #444;
+  /* color text */
+  color: #444;
 }
 
 h1 {
-    /* position the heading */
-    position: absolute;
-    width: 100%;
+  /* position the heading */
+  position: absolute;
+  width: 100%;
 
-    /* make sure that the heading is drawn on top */
-    z-index: 1;
+  /* make sure that the heading is drawn on top */
+  z-index: 1;
 }
 
 #scene-container {
-    /* tell our scene container to take up the full page */
-    position: absolute;
-    width: 100%;
-    height: 100%;
+  /* tell our scene container to take up the full page */
+  position: absolute;
+  width: 100%;
+  height: 100%;
 
-    /*
+  /*
     Set the container's background color to the same as the scene's
     background to prevent flashing on load
     */
-    background-color: skyblue;
+  background-color: skyblue;
 }
 
 #crosshair {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 4px;
-    height: 4px;
-    background-color: white;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: 1000;
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  background-color: white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
 }
 
 #ammo-display {
-    position: fixed;
-    bottom: 50px;
-    right: 50px;
-    color: white;
-    font-family: 'Courier New', monospace;
-    font-size: 24px;
-    font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-    pointer-events: none;
-    z-index: 1000;
-    user-select: none;
+  position: fixed;
+  bottom: 50px;
+  right: 50px;
+  color: white;
+  font-family: 'Courier New', monospace;
+  font-size: 24px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 1000;
+  user-select: none;
 }
 
 #ammo-display.reloading {
-    color: #ff9900;
-    animation: pulse 0.5s infinite;
+  color: #ff9900;
+  animation: pulse 0.5s infinite;
 }
 
 @keyframes pulse {
-0%, 100% { opacity: 1; }
-50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Menu overlay */
+#esc-menu,
+#keybinds-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+#esc-menu.hidden,
+#keybinds-menu.hidden {
+  display: none;
+}
+
+.menu-content {
+  background-color: #2a2a2a;
+  padding: 40px;
+  border-radius: 10px;
+  min-width: 400px;
+  text-align: center;
+}
+
+.menu-content h2 {
+  color: white;
+  margin-top: 0;
+  margin-bottom: 30px;
+  font-size: 32px;
+  letter-spacing: 2px;
+}
+
+.menu-btn {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  margin: 10px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  background-color: #444;
+  border: 2px solid #666;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.menu-btn:hover {
+  background-color: #555;
+  border-color: #888;
+  transform: translateY(-2px);
+}
+
+.menu-btn:active {
+  transform: translateY(0);
+}
+
+/* Keybinds list */
+#keybinds-list {
+  margin-bottom: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.keybind-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin: 5px 0;
+  background-color: #333;
+  border-radius: 5px;
+}
+
+.keybind-item label {
+  color: white;
+  font-size: 16px;
+  text-align: left;
+  flex: 1;
+}
+
+.keybind-item button {
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  background-color: #555;
+  border: 1px solid #777;
+  border-radius: 3px;
+  cursor: pointer;
+  min-width: 100px;
+}
+
+.keybind-item button:hover {
+  background-color: #666;
+}
+
+.keybind-item button.listening {
+  background-color: #ff9900;
+  animation: pulse 0.5s infinite;
+}
+
+/* Toggle switch for hold/toggle ADS */
+.keybind-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 50px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #555;
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: '';
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: #4caf50;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
 }

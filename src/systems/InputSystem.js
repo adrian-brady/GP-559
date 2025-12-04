@@ -12,6 +12,7 @@ import { SpawnWeaponCommand } from '../input/commands/SpawnWeaponCommand.js';
 import { FireCommand } from '../input/commands/FireCommand.js';
 import { AimCommand } from '../input/commands/AimCommand.js';
 import { ReleaseAimCommand } from '../input/commands/ReleaseAimCommand.js';
+import { MenuManager } from '../ui/MenuManager.js';
 
 class InputSystem {
   /** @type {EntityManager} */
@@ -47,6 +48,9 @@ class InputSystem {
   /** @type {PerspectiveCamera} */
   camera = null;
 
+  /** @type {MenuManager} */
+  menuManager = null;
+
   keyBindings = {
     ' ': { command: JumpCommand, continuous: false },
     c: { command: CrouchCommand, continuous: false },
@@ -56,9 +60,9 @@ class InputSystem {
     r: { command: ReloadCommand, continuous: false },
     rightclick: {
       command: AimCommand,
-      continuous: true,
+      continuous: false,
       edgeDetect: true,
-      releaseCommand: ReleaseAimCommand,
+      releaseCommand: null,
     },
     leftclick: { command: FireCommand, continuous: true },
   };
@@ -70,6 +74,7 @@ class InputSystem {
   constructor(entityManager, camera = null) {
     this.entityManager = entityManager;
     this.camera = camera;
+    this.menuManager = new MenuManager(this);
   }
 
   /**
@@ -87,6 +92,13 @@ class InputSystem {
     document.addEventListener('keydown', e => {
       const key = e.key.toLowerCase();
 
+      if (key === 'escape') {
+        this.menuManager.toggleMenu();
+        return;
+      }
+
+      if (this.menuManager.isPaused) return;
+
       // Only handle a key if not already pressed
       if (!this.keysPressed[key]) {
         this.handleKeyDown(key);
@@ -103,7 +115,9 @@ class InputSystem {
 
     // Request pointer lock on click
     document.addEventListener('click', () => {
-      document.body.requestPointerLock();
+      if (!this.menuManager.isPaused) {
+        document.body.requestPointerLock();
+      }
     });
 
     // Handle pointer lock change
@@ -130,10 +144,8 @@ class InputSystem {
 
     document.addEventListener('mouseup', e => {
       if (e.button === 2) {
-        this.handleKeyUp('rightclick');
         this.keysPressed['rightclick'] = false;
       } else if (e.button === 0) {
-        this.handleKeyUp('leftclick');
         this.keysPressed['leftclick'] = false;
       }
     });
@@ -147,8 +159,12 @@ class InputSystem {
    * Call this every frame in World.update()
    */
   update() {
+    if (this.menuManager.isPaused) return;
+
     this.updateMouseLook();
     const movementInput = this.getMovementInput();
+
+    const currentKeysPressed = { ...this.keysPressed };
 
     this.entityManager.entities.forEach(entity => {
       /** @type {PlayerController} */
@@ -160,17 +176,21 @@ class InputSystem {
       }
 
       for (const [key, binding] of Object.entries(this.keyBindings)) {
-        const isPressed = this.keysPressed[key];
+        const isPressed = currentKeysPressed[key];
         const wasPressed = this.keysPressedPrevious[key];
+
         if (binding.edgeDetect) {
           if (isPressed && !wasPressed) {
             const command = new binding.command();
-            console.log('executing command:', command);
+            console.log('executing command (isPressed, !wasPressed):', command);
             command.execute(controller);
           } else if (!isPressed && wasPressed) {
             if (binding.releaseCommand) {
               const command = new binding.releaseCommand();
-              console.log('executing command:', command);
+              console.log(
+                'executing command (!isPressed, wasPressed):',
+                command
+              );
               command.execute(controller);
             }
           }
@@ -182,7 +202,7 @@ class InputSystem {
       }
     });
 
-    this.keysPressedPrevious = { ...this.keysPressed };
+    this.keysPressedPrevious = currentKeysPressed;
   }
 
   /**
@@ -218,6 +238,8 @@ class InputSystem {
   handleKeyUp(key) {
     const binding = this.keyBindings[key];
     if (!binding || !binding.releaseCommand) return;
+
+    if (!this.keysPressedPrevious[key]) return;
 
     const command = new binding.releaseCommand();
 
