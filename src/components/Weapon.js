@@ -51,18 +51,22 @@ class Weapon extends Component {
   reloadProgress = 0;
   recoilKick = 0;
 
-  lastCameraBob = { x: 0, y: 0 };
+  bobFrequency = 0.01;
+  bobAmount = 0.3;
+  bobSpeed = 5.0;
+  idleBobFreqDivider = 2.0;
+  bobBasePosition = { x: 0, y: 0 };
 
-  bobbingTime = 0;
-  bobbingSpeed = 4;
-  bobbingAmount = 0.01;
-  bobbingHorizontal = 0.01;
-  bobbingRotation = 0.01;
-  bobbingLerpSpeed = 8;
+  swayAmountPos = 0.5;
+  swayAmountRot = 5.0;
+  swaySpeedPos = 0.1;
+  swaySpeedRot = 0.1;
+  minSwayVal = { x: -1, y: -1 };
+  maxSwayVal = { x: 1, y: 1 };
+  currentMouseInput = { x: 0, y: 0 };
 
-  currentBobX = 0;
-  currentBobY = 0;
-  currentBobRotZ = 0;
+  tiltRotAmount = 0.05; // how much to tilt based on strafe
+  tiltRotSpeed = 5.0;
 
   currentAmmo = 0;
   lastFireTime = 0;
@@ -101,6 +105,9 @@ class Weapon extends Component {
     this.physicsWorld = physicsWorld;
     this.decalSystem = decalSystem;
     this.ammoCounter = ammoCounter;
+
+    this.bobBasePosition.x = this.weaponMesh.position.x;
+    this.bobBasePosition.y = this.weaponMesh.position.y;
 
     if (this.ammoCounter) {
       this.ammoCounter.update(
@@ -445,6 +452,56 @@ class Weapon extends Component {
   }
 
   /**
+   *
+   * @param {number} velocity - Player movement speed
+   * @param {number} deltaTime
+   */
+  weaponBob(velocity, deltaTime) {
+    if (isNaN(velocity) || velocity === undefined) {
+      console.warn('weaponBob: velocity is NaN or undefined');
+      velocity = 0;
+    }
+
+    let bobFreq = this.bobFrequency;
+
+    if (velocity < 4.0) {
+      bobFreq /= this.idleBobFreqDivider;
+    }
+
+    const time = Date.now() * bobFreq;
+
+    const bobY = (Math.sin(time) * this.bobAmount * velocity) / 10;
+    const targetY = this.bobBasePosition.y + bobY;
+
+    const bobX = (Math.sin(time * 0.5) * this.bobAmount * velocity) / 10;
+    const targetX = this.bobBasePosition.x + bobX;
+
+    if (isNaN(targetX) || isNaN(targetY)) {
+      console.warn('weaponBob: targets are NaN', {
+        bobBaseX: this.bobBase.bobBasePosition.x,
+        baseBaseY: this.bobBasePosition.y,
+        bobX,
+        bobY,
+        velocity,
+      });
+      return;
+    }
+
+    const lerpFactor = this.bobSpeed * deltaTime;
+
+    this.weaponMesh.position.y = this.lerp(
+      this.weaponMesh.position.y,
+      targetY,
+      lerpFactor
+    );
+    this.weaponMesh.position.x = this.lerp(
+      this.weaponMesh.position.x,
+      targetX,
+      lerpFactor
+    );
+  }
+
+  /**
    * Update weapon to cancel out camera bobbing
    * @param {number} deltaTime
    */
@@ -457,48 +514,20 @@ class Weapon extends Component {
     const playerController = this.entity.getComponent(PlayerController);
     if (!playerController) return;
 
+    const velocity = playerController.velocity;
+    if (!velocity) {
+      console.warn('velocity not defined on player controller');
+      return;
+    }
+    const velocityMagnitude = Math.sqrt(
+      velocity.x * velocity.y + velocity.z * velocity.z
+    );
+
+    const inputDirection = playerController.inputDirection;
+
+    this.weaponBob(velocityMagnitude, deltaTime);
+
     this.updateADS(deltaTime, playerController.isADS());
-
-    let currentCameraBobX = 0;
-    let currentCameraBobY = 0;
-
-    if (
-      cameraFollow.bobbingEnabled &&
-      playerController.isMoving() &&
-      playerController.isGrounded() &&
-      !playerController.isProne() &&
-      !playerController.isADS()
-    ) {
-      currentCameraBobY =
-        Math.sin(cameraFollow.bobbingTime) * cameraFollow.bobbingAmount;
-      currentCameraBobX =
-        Math.sin(cameraFollow.bobbingTime * 0.5) *
-        cameraFollow.bobbingHorizontal;
-    }
-
-    // Weapon bobbing
-    let targetBobX = 0;
-    let targetBobY = 0;
-    let targetBobRotZ = 0;
-
-    if (playerController.isMoving() && playerController.isGrounded()) {
-      this.bobbingTime += deltaTime * this.bobbingSpeed;
-
-      targetBobY = Math.sin(this.bobbingTime) * this.bobbingAmount;
-      targetBobX = Math.sin(this.bobbingTime * 0.5) * this.bobbingHorizontal;
-      targetBobRotZ = Math.sin(this.bobbingTime * 0.5) * this.bobbingRotation;
-    }
-
-    const lerpFactor = 1 - Math.exp(-this.bobbingLerpSpeed * deltaTime);
-    this.currentBobX += (targetBobX - this.currentBobX) * lerpFactor;
-    this.currentBobY += (targetBobY - this.currentBobY) * lerpFactor;
-    this.currentBobRotZ += (targetBobRotZ - this.currentBobRotZ) * lerpFactor;
-
-    this.weaponGroup.position.x =
-      this.weaponOffset.x - currentCameraBobX + this.currentBobX;
-    this.weaponGroup.position.y =
-      this.weaponOffset.y - currentCameraBobY + this.currentBobY;
-    this.weaponGroup.rotation.z = this.currentBobRotZ;
 
     this.updateReloadAnimation(deltaTime);
     this.updateRecoil(deltaTime);
@@ -584,6 +613,10 @@ class Weapon extends Component {
    * @param {number} t
    */
   lerp(start, end, t) {
+    if (isNaN(start) || isNaN(end) || isNaN(t)) {
+      console.warn('lerp received NaN:', { start, end, t });
+      return start || 0;
+    }
     return start + (end - start) * t;
   }
 

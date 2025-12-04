@@ -18,6 +18,9 @@ class PlayerController extends Component {
   /** @type {Vector3} */
   velocity;
 
+  /** @type {Object} */
+  inputDirection = { x: 0, y: 0 };
+
   /** @type {number} */
   speed = 5;
 
@@ -65,6 +68,7 @@ class PlayerController extends Component {
     super(entity);
 
     this.physicsWorld = physicsWorld;
+    this.velocity = new Vector3();
 
     this.groundingController = new GroundingController(this);
     this.movementController = new MovementController(this);

@@ -63,6 +63,8 @@ class MovementController {
         },
         true
       );
+
+      this.player.velocity.set(newHorizontal.x, currentVel.y, newHorizontal.z);
     } else {
       this.player.movementState = MovementState.IDLE;
 
@@ -82,6 +84,8 @@ class MovementController {
         },
         true
       );
+
+      this.player.velocity.set(newHorizontal.x, currentVel.y, newHorizontal.z);
     }
 
     this.movementDirection.set(0, 0, 0);
@@ -93,6 +97,9 @@ class MovementController {
    */
   handleMove(direction) {
     this.movementDirection.copy(direction);
+
+    this.player.inputDirection.x = direction.x;
+    this.player.inputDirection.y = direction.z;
   }
 
   /**
