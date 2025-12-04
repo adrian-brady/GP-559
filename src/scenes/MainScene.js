@@ -25,6 +25,7 @@ import { Weapon } from '../components/Weapon.js';
 import { loadAK47, loadWeaponModel } from '../assets/models/WeaponModels.js';
 import { WeaponDefinitions } from '../config/WeaponDefinitions.js';
 import { DecalSystem } from '../systems/DecalSystem.js';
+import { AmmoCounter } from '../ui/AmmoCounter.js';
 
 class MainScene extends GameScene {
   /** @type {PerspectiveCamera} */
@@ -36,16 +37,21 @@ class MainScene extends GameScene {
   /** @type {DecalSystem} */
   decalSystem;
 
+  /** @type {AmmoCounter} */
+  ammoCounter;
+
   /**
    * Sets up the Scene
    * @param {PerspectiveCamera} camera
    * @param {RAPIER.World} physicsWorld
    * @param {DecalSystem} decalSystem
+   * @param {AmmoCounter} ammoCounter
    */
-  async initialize(camera, physicsWorld, decalSystem) {
+  async initialize(camera, physicsWorld, decalSystem, ammoCounter) {
     this.camera = camera;
     this.physicsWorld = physicsWorld;
     this.decalSystem = decalSystem;
+    this.ammoCounter = ammoCounter;
 
     this.camera.position.set(0, 5, 10);
     this.camera.lookAt(0, 0, 0);
@@ -153,7 +159,8 @@ class MainScene extends GameScene {
       weaponModel,
       weaponDef,
       this.physicsWorld,
-      this.decalSystem
+      this.decalSystem,
+      this.ammoCounter
     );
   }
 

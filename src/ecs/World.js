@@ -17,6 +17,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import { PhysicsSystem } from '../systems/PhysicsSystem.js';
 import { EntitySpawner } from '../systems/EntitySpawner.js';
 import { DecalSystem } from '../systems/DecalSystem.js';
+import { AmmoCounter } from '../ui/AmmoCounter.js';
 
 /**
  * Main world/scene manager
@@ -55,6 +56,9 @@ class World {
   /** @type {DecalSystem} */
   decalSystem;
 
+  /** @type {AmmoCounter} */
+  ammoCounter;
+
   /**
    * @param {HTMLElement} container
    * @param {typeof GameScene} SceneClass
@@ -76,6 +80,8 @@ class World {
     this.physicsWorld = new RapierWorld(gravity);
     this.physicsSystem = new PhysicsSystem(this.physicsWorld);
 
+    this.ammoCounter = new AmmoCounter();
+
     this.decalSystem = new DecalSystem(this.scene);
 
     this.setupRenderer();
@@ -95,7 +101,8 @@ class World {
     await this.currentScene.initialize(
       this.camera,
       this.physicsWorld,
-      this.decalSystem
+      this.decalSystem,
+      this.ammoCounter
     );
 
     window.addEventListener('resize', () => this.onWindowResize());

@@ -8,6 +8,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import { DecalSystem } from '../systems/DecalSystem.js';
 import { RigidBody } from './RigidBody.js';
 import { MeshInstance } from './MeshInstance.js';
+import { AmmoCounter } from '../ui/AmmoCounter.js';
 
 class Weapon extends Component {
   /** @type {PerspectiveCamera} */
@@ -27,6 +28,9 @@ class Weapon extends Component {
 
   /** @type {DecalSystem} */
   decalSystem;
+
+  /** @type {AmmoCounter} */
+  ammoCounter;
 
   parts = {
     magazine: null,
@@ -79,6 +83,7 @@ class Weapon extends Component {
    * @param {WeaponDefinition} definition
    * @param {RAPIER.World} physicsWorld
    * @param {DecalSystem} decalSystem
+   * @param {AmmoCounter} ammoCounter
    */
   constructor(
     entity,
@@ -86,7 +91,8 @@ class Weapon extends Component {
     weaponModel,
     definition,
     physicsWorld,
-    decalSystem
+    decalSystem,
+    ammoCounter
   ) {
     super(entity);
     this.camera = camera;
@@ -94,6 +100,14 @@ class Weapon extends Component {
     this.definition = definition;
     this.physicsWorld = physicsWorld;
     this.decalSystem = decalSystem;
+    this.ammoCounter = ammoCounter;
+
+    if (this.ammoCounter) {
+      this.ammoCounter.update(
+        this.currentAmmo,
+        this.definition.stats.magazineSize
+      );
+    }
 
     this.findWeaponParts(weaponModel);
 
@@ -135,6 +149,13 @@ class Weapon extends Component {
 
     this.currentAmmo--;
     this.lastFireTime = Date.now() / 1000;
+
+    if (this.ammoCounter) {
+      this.ammoCounter.update(
+        this.currentAmmo,
+        this.definition.stats.magazineSize
+      );
+    }
 
     const ray = this.performRaycast();
 
@@ -265,6 +286,13 @@ class Weapon extends Component {
     if (this.isReloading) return;
     this.isReloading = true;
     this.reloadProgress = 0;
+    if (this.ammoCounter) {
+      this.ammoCounter.update(
+        this.currentAmmo,
+        this.definition.stats.magazineSize,
+        true
+      );
+    }
   }
 
   /**
@@ -370,6 +398,14 @@ class Weapon extends Component {
     this.isReloading = false;
     this.currentAmmo = this.definition.stats.magazineSize;
     this.reloadProgress = 0;
+
+    if (this.ammoCounter) {
+      this.ammoCounter.update(
+        this.currentAmmo,
+        this.definition.stats.magazineSize,
+        false
+      );
+    }
 
     Object.keys(this.parts).forEach(partType => {
       const part = this.parts[partType];
