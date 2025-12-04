@@ -73,9 +73,9 @@ const WeaponDefinitions = {
     },
     ads: {
       sightNode: 'Weapon_02_5',
-      transitionSpeed: 8,
+      transitionSpeed: 16,
       fovReduction: 25,
-      offsetAdjustment: { x: 0, y: -0.15, z: -2 },
+      offsetAdjustment: { x: 0, y: -0.15, z: -0.2 },
     },
     animations: {
       reload: {

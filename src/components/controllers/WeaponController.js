@@ -16,6 +16,9 @@ class WeaponController {
   /** @type {number} */
   reloadTimer = 0;
 
+  /** @type {Weapon} */
+  weapon;
+
   // Reload duration should be indicated by the current weapon
 
   /**
@@ -98,9 +101,14 @@ class WeaponController {
       return;
     }
 
-    const weapon = this.player.entity.getComponent(Weapon);
-    if (weapon && weapon.canFire()) {
-      weapon.fire();
+    if (!this.weapon) {
+      const weapon = this.player.entity.getComponent(Weapon);
+      if (weapon) {
+        this.weapon = weapon;
+      }
+    }
+    if (this.weapon && this.weapon.canFire()) {
+      this.weapon.fire();
     }
   }
 }

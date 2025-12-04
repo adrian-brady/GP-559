@@ -446,9 +446,6 @@ class Weapon extends Component {
     const recoverySpeed = this.definition.animations.fire.recoilRecoverySpeed;
     this.recoilKick -= deltaTime * recoverySpeed;
     if (this.recoilKick < 0) this.recoilKick = 0;
-
-    this.weaponGroup.position.z = this.originalOffset.z + this.recoilKick;
-    this.weaponGroup.rotation.x = -0.15 * this.recoilKick;
   }
 
   /**
@@ -502,6 +499,86 @@ class Weapon extends Component {
   }
 
   /**
+   * @param {number} deltaX - Mouse movement in X
+   * @param {number} deltaY - Mouse movement in Y
+   */
+  applyMouseInput(deltaX, deltaY) {
+    this.currentMouseInput.x += deltaX * 0.01;
+    this.currentMouseInput.y += deltaY * 0.01;
+
+    this.currentMouseInput.x = Math.max(
+      this.minSwayVal.x,
+      Math.min(this.maxSwayVal.x, this.currentMouseInput.x)
+    );
+    this.currentMouseInput.y = Math.max(
+      this.minSwayVal.y,
+      Math.min(this.maxSwayVal.y, this.currentMouseInput.y)
+    );
+  }
+
+  /**
+   * Weapon sway
+   * @param {Object} mouseInput - {x, y} mouse delta
+   * @param {number} deltaTime
+   */
+  weaponSway(mouseInput, deltaTime) {
+    const clampedX = Math.max(
+      this.minSwayVal.x,
+      Math.min(this.maxSwayVal.x, mouseInput.x)
+    );
+    const clampedY = Math.max(
+      this.minSwayVal.y,
+      Math.min(this.maxSwayVal.y, mouseInput.y)
+    );
+
+    const targetPosX =
+      this.originalOffset.x + clampedX * this.swayAmountPos * deltaTime;
+    const targetPosY =
+      this.originalOffset.y + clampedY * this.swayAmountPos * deltaTime;
+
+    const targetRotY = -(clampedX * this.swayAmountRot) * deltaTime;
+    const targetRotX = clampedY * this.swayAmountRot * deltaTime;
+
+    this.weaponMesh.position.x = this.lerp(
+      this.weaponMesh.position.x,
+      targetPosX,
+      this.swaySpeedPos
+    );
+    this.weaponMesh.position.y = this.lerp(
+      this.weaponMesh.position.y,
+      targetPosY,
+      this.swaySpeedPos
+    );
+    console.log('target rot:', { x: targetRotX, y: targetRotY });
+
+    this.weaponMesh.rotation.y = this.lerp(
+      this.weaponMesh.rotation.y,
+      targetRotY,
+      this.swaySpeedRot
+    );
+    this.weaponMesh.rotation.x = this.lerp(
+      this.weaponMesh.rotation.x,
+      targetRotX,
+      this.swaySpeedRot
+    );
+  }
+
+  /**
+   * Weapon tilt
+   * @param {Object} inputDirection - {x, y} normalized input
+   * @param {number} deltaTime
+   */
+  weaponTilt(inputDirection, deltaTime) {
+    const targetTilt = inputDirection.x * this.tiltRotAmount;
+    const lerpFactor = this.tiltRotSpeed * deltaTime;
+    this.weaponMesh.rotation.z = this.lerp(
+      this.weaponMesh.rotation.z,
+      targetTilt,
+      lerpFactor
+    );
+  }
+
+  /**
    * Update weapon to cancel out camera bobbing
    * @param {number} deltaTime
    */
@@ -521,15 +598,26 @@ class Weapon extends Component {
     }
 
     const velocityMagnitude = velocity.length();
-
     const inputDirection = playerController.inputDirection;
 
-    this.weaponBob(velocityMagnitude, deltaTime);
-
     this.updateADS(deltaTime, playerController.isADS());
+    this.weaponBob(velocityMagnitude, deltaTime);
+    this.weaponTilt(inputDirection, deltaTime);
+    // this.weaponSway(this.currentMouseInput, deltaTime);
+
+    this.weaponGroup.position.set(
+      this.weaponOffset.x,
+      this.weaponOffset.y,
+      this.weaponOffset.z + this.recoilKick
+    );
+
+    this.weaponGroup.rotation.x = -0.15 * this.recoilKick;
 
     this.updateReloadAnimation(deltaTime);
     this.updateRecoil(deltaTime);
+
+    this.currentMouseInput.x *= 0.9;
+    this.currentMouseInput.y *= 0.9;
   }
 
   /**
@@ -594,6 +682,12 @@ class Weapon extends Component {
       this.originalOffset.z,
       this.sightAlignmentOffset.z,
       this.adsProgress
+    );
+
+    this.weaponGroup.position.set(
+      this.weaponOffset.x,
+      this.weaponOffset.y,
+      this.weaponOffset.z
     );
 
     // const targetFOV = this.lerp(

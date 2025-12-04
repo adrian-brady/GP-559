@@ -13,6 +13,7 @@ import { FireCommand } from '../input/commands/FireCommand.js';
 import { AimCommand } from '../input/commands/AimCommand.js';
 import { ReleaseAimCommand } from '../input/commands/ReleaseAimCommand.js';
 import { MenuManager } from '../ui/MenuManager.js';
+import { Weapon } from '../components/Weapon.js';
 
 class InputSystem {
   /** @type {EntityManager} */
@@ -50,6 +51,9 @@ class InputSystem {
 
   /** @type {MenuManager} */
   menuManager = null;
+
+  /** @type {PlayerController} */
+  playerController;
 
   keyBindings = {
     ' ': { command: JumpCommand, continuous: false },
@@ -228,6 +232,9 @@ class InputSystem {
    */
   updateMouseLook() {
     if (!this.camera) return;
+
+    const mouseDeltaX = this.mouseX;
+    const mouseDeltaY = this.mouseY;
 
     // Update pitch and yaw based on mouse movement
     this.yaw -= this.mouseX * this.mouseSensitivity;
