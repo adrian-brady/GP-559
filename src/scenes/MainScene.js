@@ -27,7 +27,8 @@ import { WeaponDefinitions } from '../config/WeaponDefinitions.js';
 import { DecalSystem } from '../systems/DecalSystem.js';
 import { AmmoCounter } from '../ui/AmmoCounter.js';
 import { DeathBehavior } from '../components/Health.js';
-import { createTargetDummy } from '../entities/NPC.js';
+import { createNPC, createTargetDummy } from '../entities/NPC.js';
+import { AIBehavior } from '../components/AIController.js';
 
 class MainScene extends GameScene {
   /** @type {PerspectiveCamera} */
@@ -98,6 +99,19 @@ class MainScene extends GameScene {
       position: { x: 5, y: 1, z: -5 },
       health: 50,
       color: 0xffaa00,
+    });
+
+    createNPC(this.entityManager, this.scene, this.physicsWorld, {
+      name: 'wanderer',
+      position: { x: -5, y: 2, z: -5 },
+      health: 100,
+      color: 0x00ff00,
+      aiBehavior: AIBehavior.WANDER,
+      deathBehavior: DeathBehavior.DISAPPEAR,
+      aiConfig: {
+        speed: 5.0,
+        wanderInterval: 4.0,
+      },
     });
   }
 

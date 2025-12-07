@@ -4,6 +4,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import { DeathBehavior, Health } from '../components/Health.js';
 import { MeshInstance } from '../components/MeshInstance.js';
 import { RigidBody } from '../components/RigidBody.js';
+import { AIBehavior, AIController } from '../components/AIController.js';
 
 /**
  * Configuration for creating an NPC
@@ -16,6 +17,8 @@ import { RigidBody } from '../components/RigidBody.js';
  * @property {number} [radius] - NPC capsule radius (default: 0.4)
  * @property {Function} [onDeath] - Custom death callback
  * @property {any} [deathData] - Custom death data
+ * @property {AIBehavior} [aiBehavior] - AI Behavior type (default: IDLE)
+ * @property {Object} [aiConfig] - AI configuration (speed, waypoints, etc)
  */
 
 /**
@@ -37,6 +40,8 @@ export function createNPC(entityManager, scene, physicsWorld, config) {
     color = 0xff0000,
     onDeath = null,
     deathData = null,
+    aiBehavior = AIBehavior.IDLE,
+    aiConfig = {},
   } = config;
 
   const npc = entityManager.createEntity(scene, name);
@@ -68,8 +73,14 @@ export function createNPC(entityManager, scene, physicsWorld, config) {
   const collider = physicsWorld.createCollider(colliderDesc, rigidBody);
 
   collider.userData = { entity: npc, type: 'entity' };
+  npc.addComponent(RigidBody, rigidBody, collider, physicsWorld);
   npc.addComponent(Health, health, deathBehavior, onDeath, deathData);
+  npc.addComponent(AIController, physicsWorld, aiBehavior, aiConfig);
   npc.isNPC = true;
+
+  console.log(
+    `Created NPC: ${name} at (${position.x}, ${position.y}, ${position.z}) with AI: ${aiBehavior}`
+  );
 
   return npc;
 }
@@ -96,6 +107,7 @@ export function createTargetDummy(entityManager, scene, physicsWorld, config) {
     health,
     deathBehavior: DeathBehavior.DISAPPEAR,
     color,
+    aiBehavior: AIBehavior.IDLE,
     onDeath: entity => {
       console.log('Target destroyed');
     },
