@@ -63,7 +63,7 @@ class WeaponDefinition {
 const WeaponDefinitions = {
   ak47: new WeaponDefinition({
     name: 'AK-47',
-    modelPath: '/src/assets/models/weapons/Weapon_02.fbx',
+    modelPath: './src/assets/models/weapons/Weapon_02.fbx',
     parts: {
       magazine: 'Weapon_02_2',
       chargingHandle: 'Weapon_02_4',
@@ -113,7 +113,7 @@ const WeaponDefinitions = {
 
   pistol: new WeaponDefinition({
     name: 'Pistol',
-    modelPath: '/src/assets/models/weapons/Weapon_01.fbx',
+    modelPath: './src/assets/models/weapons/Weapon_01.fbx',
     parts: {
       magazine: 'Pistol_Magazine',
       slide: 'Pistol_Slide',

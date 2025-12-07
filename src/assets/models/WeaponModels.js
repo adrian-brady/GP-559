@@ -110,7 +110,7 @@ async function loadWeaponModel(modelPath) {
  * @returns {Promise<Group>}
  */
 async function loadAK47() {
-  return await loadWeaponModel('/src/assets/models/weapons/Weapon_02.fbx');
+  return await loadWeaponModel('./src/assets/models/weapons/Weapon_02.fbx');
 }
 
 /**
