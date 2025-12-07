@@ -1,4 +1,12 @@
-import { Group, Mesh, Object3D, PerspectiveCamera, Vector3 } from 'three';
+import {
+  BoxGeometry,
+  Group,
+  Mesh,
+  Object3D,
+  PerspectiveCamera,
+  Vector3,
+  MeshStandardMaterial,
+} from 'three';
 import { Component } from '../ecs/Component.js';
 import { CameraFollow } from './CameraFollow.js';
 import { PlayerController } from './PlayerController.js';
@@ -10,6 +18,7 @@ import { RigidBody } from './RigidBody.js';
 import { MeshInstance } from './MeshInstance.js';
 import { AmmoCounter } from '../ui/AmmoCounter.js';
 import { Health } from './Health.js';
+import { GameConfig } from '../config/GameConfig.js';
 
 class Weapon extends Component {
   /** @type {PerspectiveCamera} */
@@ -32,6 +41,18 @@ class Weapon extends Component {
 
   /** @type {AmmoCounter} */
   ammoCounter;
+
+  /** @type {boolean} */
+  isPrototypeMesh;
+
+  /** @type {Mesh} */
+  prototypeWeaponMesh;
+
+  /** @type {Group|Mesh} */
+  fullFeaponMesh;
+
+  /** @type {Function} */
+  modeChangeHandler;
 
   parts = {
     magazine: null,
@@ -101,11 +122,20 @@ class Weapon extends Component {
   ) {
     super(entity);
     this.camera = camera;
-    this.weaponMesh = weaponModel;
     this.definition = definition;
     this.physicsWorld = physicsWorld;
     this.decalSystem = decalSystem;
     this.ammoCounter = ammoCounter;
+    this.weaponMesh = weaponModel;
+
+    this.isPrototypeMode = GameConfig.isPrototypeMode;
+
+    this.fullWeaponMesh = weaponModel;
+    this.prototypeWeaponMesh = this.createPrototypeWeapon();
+
+    this.weaponMesh = this.isPrototypeMode
+      ? this.prototypeWeaponMesh
+      : this.fullWeaponMesh;
 
     this.bobBasePosition.x = this.weaponMesh.position.x;
     this.bobBasePosition.y = this.weaponMesh.position.y;
@@ -117,7 +147,9 @@ class Weapon extends Component {
       );
     }
 
-    this.findWeaponParts(weaponModel);
+    if (!this.isPrototypeMode) {
+      this.findWeaponParts(weaponModel);
+    }
 
     this.weaponGroup = new Group();
     this.weaponGroup.position.set(
@@ -140,6 +172,56 @@ class Weapon extends Component {
         }
       });
     }
+
+    this.modeChangeHandler = isPrototype => this.handleModeChange(isPrototype);
+    GameConfig.onModeChange(this.modeChangeHandler);
+  }
+
+  /**
+   * Create a simple prototype weapon (box geometry)
+   * @returns {Mesh}
+   */
+  createPrototypeWeapon() {
+    const geometry = new BoxGeometry(0.1, 0.1, 0.4);
+    const material = new MeshStandardMaterial({
+      color: 0x333333,
+      roughness: 0.7,
+      metalness: 0.3,
+    });
+    const mesh = new Mesh(geometry, material);
+    mesh.castShadow = true;
+
+    mesh.position.set(0, 0, 0);
+
+    return mesh;
+  }
+
+  /**
+   * Handle mode change between prototype and full
+   * @param {boolean} isPrototype
+   */
+  handleModeChange(isPrototype) {
+    if (this.isPrototypeMode === isPrototype) return;
+
+    this.isPrototypeMode = isPrototype;
+    console.log(
+      `Weapon switching to ${isPrototype ? 'PROTOTYPE' : 'FULL'} mode`
+    );
+
+    this.weaponGroup.remove(this.weaponMesh);
+
+    if (isPrototype) {
+      this.weaponMesh = this.prototypeWeaponMesh;
+    } else {
+      this.weaponMesh = this.fullWeaponMesh;
+    }
+
+    this.weaponGroup.add(this.weaponMesh);
+
+    this.bobBasePosition.x = this.weaponMesh.position.x;
+    this.bobBasePosition.y = this.weaponMesh.position.y;
+
+    console.log('Weapon mode switched successfully');
   }
 
   canFire() {
@@ -741,7 +823,9 @@ class Weapon extends Component {
     this.camera.remove(this.weaponGroup);
     this.camera.updateProjectionMatrix();
 
-    this.camera.remove(this.weaponGroup);
+    if (this.modeChangeHandler) {
+      GameConfig.offModeChange(this.modeChangeHandler);
+    }
   }
 }
 

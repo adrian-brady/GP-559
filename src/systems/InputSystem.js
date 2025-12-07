@@ -14,6 +14,7 @@ import { AimCommand } from '../input/commands/AimCommand.js';
 import { ReleaseAimCommand } from '../input/commands/ReleaseAimCommand.js';
 import { MenuManager } from '../ui/MenuManager.js';
 import { Weapon } from '../components/Weapon.js';
+import { GameConfig } from '../config/GameConfig.js';
 
 class InputSystem {
   /** @type {EntityManager} */
@@ -281,6 +282,11 @@ class InputSystem {
    * @param {string} key
    */
   handleKeyDown(key) {
+    if (key === 'm') {
+      GameConfig.toggleMode();
+      return;
+    }
+
     const binding = this.keyBindings[key];
     if (!binding) return;
 
