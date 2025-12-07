@@ -1,6 +1,7 @@
 import { Object3D } from 'three';
 import { Entity } from '../ecs/Entity.js';
 import { SafeArray } from '../utils/SafeArray.js';
+import { RigidBody } from '../components/RigidBody.js';
 
 class EntityManager {
   /** @type {SafeArray<Entity>} */
@@ -27,7 +28,32 @@ class EntityManager {
    * @param {Entity} entity
    */
   removeEntity(entity) {
-    this.entities.removeEntity(entity);
+    this.entities.remove(entity);
+  }
+
+  cleanupDeadEntities() {
+    const entitiesToRemove = [];
+
+    this.entities.forEach(entity => {
+      if (entity.markedForDeath) {
+        entitiesToRemove.push(entity);
+      }
+    });
+
+    entitiesToRemove.forEach(entity => {
+      /** @type {RigidBody} */
+      const rigidBody = entity.getComponent(RigidBody);
+      if (rigidBody) {
+        rigidBody.cleanup();
+      }
+      if (entity.transform.parent) {
+        entity.transform.parent.remove(entity.transform);
+      }
+
+      this.removeEntity(entity);
+    });
+
+    return entitiesToRemove.length;
   }
 
   /** Update each entity one tick */

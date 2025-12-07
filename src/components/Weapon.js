@@ -9,6 +9,7 @@ import { DecalSystem } from '../systems/DecalSystem.js';
 import { RigidBody } from './RigidBody.js';
 import { MeshInstance } from './MeshInstance.js';
 import { AmmoCounter } from '../ui/AmmoCounter.js';
+import { Health } from './Health.js';
 
 class Weapon extends Component {
   /** @type {PerspectiveCamera} */
@@ -173,6 +174,17 @@ class Weapon extends Component {
         ray.hitObject,
         ray.surfaceType
       );
+
+      if (ray.surfaceType === 'entity' && ray.collider?.userData?.entity) {
+        const hitEntity = ray.collider.userData.entity;
+        /** @type {Health} */
+        const healthComponent = hitEntity.getComponent(Health);
+
+        if (healthComponent) {
+          const damage = this.definition.stats.damage;
+          healthComponent.takeDamage(damage);
+        }
+      }
 
       console.log('Hit:', ray.surfaceType, 'at', ray.position);
     }
@@ -567,15 +579,24 @@ class Weapon extends Component {
    * Weapon tilt
    * @param {Object} inputDirection - {x, y} normalized input
    * @param {number} deltaTime
+   * @param {boolean} isADS
    */
-  weaponTilt(inputDirection, deltaTime) {
+  weaponTilt(inputDirection, deltaTime, isADS) {
     const targetTilt = inputDirection.x * this.tiltRotAmount;
     const lerpFactor = this.tiltRotSpeed * deltaTime;
-    this.weaponMesh.rotation.z = this.lerp(
-      this.weaponMesh.rotation.z,
-      targetTilt,
-      lerpFactor
-    );
+    if (isADS) {
+      this.weaponMesh.rotation.z = this.lerp(
+        this.weaponMesh.rotation.z,
+        targetTilt,
+        lerpFactor
+      );
+    } else {
+      this.weaponMesh.rotation.z = this.lerp(
+        this.weaponMesh.rotation.z,
+        this.originalRotations,
+        lerpFactor
+      );
+    }
   }
 
   /**
@@ -602,7 +623,7 @@ class Weapon extends Component {
 
     this.updateADS(deltaTime, playerController.isADS());
     this.weaponBob(velocityMagnitude, deltaTime);
-    this.weaponTilt(inputDirection, deltaTime);
+    // this.weaponTilt(inputDirection, deltaTime, playerController.isADS());
     // this.weaponSway(this.currentMouseInput, deltaTime);
 
     this.weaponGroup.position.set(
@@ -629,7 +650,7 @@ class Weapon extends Component {
 
     if (!sightPart) {
       console.warn('No sight part found, using generic ADS offset');
-      this.sightAlignmentOffset = { x: 0, y: -0.15, z: -0.35 };
+      this.sightAlignmentOffset = { x: 0, y: -0, z: -0.0 };
       return;
     }
 

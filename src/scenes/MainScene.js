@@ -26,6 +26,8 @@ import { loadAK47, loadWeaponModel } from '../assets/models/WeaponModels.js';
 import { WeaponDefinitions } from '../config/WeaponDefinitions.js';
 import { DecalSystem } from '../systems/DecalSystem.js';
 import { AmmoCounter } from '../ui/AmmoCounter.js';
+import { DeathBehavior } from '../components/Health.js';
+import { createTargetDummy } from '../entities/NPC.js';
 
 class MainScene extends GameScene {
   /** @type {PerspectiveCamera} */
@@ -60,6 +62,7 @@ class MainScene extends GameScene {
     await this.setupPlayer();
     this.setupEnvironment();
     this.setupObjects();
+    this.setupNPCs();
     this.scene.background = new Color('skyblue');
   }
 
@@ -87,6 +90,15 @@ class MainScene extends GameScene {
       { x: -3, y: 1.5, z: 2 },
       RAPIER.ColliderDesc.ball(1.5)
     );
+  }
+
+  setupNPCs() {
+    createTargetDummy(this.entityManager, this.scene, this.physicsWorld, {
+      name: 'target_1',
+      position: { x: 5, y: 1, z: -5 },
+      health: 50,
+      color: 0xffaa00,
+    });
   }
 
   setupLighting() {

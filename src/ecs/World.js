@@ -172,6 +172,7 @@ class World {
     this.entityManager.entities.forEach(entity => {
       entity.update(deltaTime);
     });
+    this.entityManager.cleanupDeadEntities();
   }
 }
 

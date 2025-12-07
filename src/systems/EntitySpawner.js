@@ -7,6 +7,7 @@ import { RigidBody } from '../components/RigidBody.js';
 import { createAK47, loadAK47 } from '../assets/models/WeaponModels.js';
 import { ModelInstance } from '../components/ModelInstance.js';
 import { DecalSystem } from './DecalSystem.js';
+import { DeathBehavior } from '../components/Health.js';
 
 class EntitySpawner {
   /** @type {Scene} */
@@ -38,8 +39,16 @@ class EntitySpawner {
    * @param {Vector3} position
    * @param {Object} physicsConfig - Physics configuration
    * @param {Component[]} additionalComponents - Extra components to add
+   * @param {Object|null} healthConfig - Optional health config {maxHealth, deathBehavior, onDeath, deathData}
    */
-  spawnObject(name, model, position, physicsConfig, additionalComponents = []) {
+  spawnObject(
+    name,
+    model,
+    position,
+    physicsConfig,
+    additionalComponents = [],
+    healthConfig = null
+  ) {
     const entity = this.entityManager.createEntity(this.scene, name);
 
     if (model instanceof Group) {
@@ -63,7 +72,18 @@ class EntitySpawner {
       .setDensity(physicsConfig.density ?? 1.0);
 
     const collider = this.physicsWorld.createCollider(colliderDesc, rigidBody);
-    entity.addComponent(RigidBody, rigidBody, collider);
+    collider.userData = { entity: entity, type: 'entity' };
+    entity.addComponent(RigidBody, rigidBody, collider, this.physicsWorld);
+
+    if (healthConfig) {
+      entity.addComponent(
+        Health,
+        healthConfig.maxHealth || 100,
+        healthConfig.deathBehavior || DeathBehavior.DISAPPEAR,
+        healthConfig.onDeath || null,
+        healthConfig.deathData || null
+      );
+    }
 
     additionalComponents.forEach(({ component, ...args }) => {
       entity.addComponent(component, ...Object.values(args));
