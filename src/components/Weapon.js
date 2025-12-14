@@ -173,6 +173,8 @@ class Weapon extends Component {
       });
     }
 
+    this.calculateSightAlignment();
+
     this.modeChangeHandler = isPrototype => this.handleModeChange(isPrototype);
     GameConfig.onModeChange(this.modeChangeHandler);
   }
@@ -741,8 +743,8 @@ class Weapon extends Component {
     this.weaponGroup.worldToLocal(sightLocalPos);
 
     this.sightAlignmentOffset = {
-      x: -sightLocalPos.x,
-      y: -sightLocalPos.y,
+      x: 0,
+      y: 0.1,
       z: -sightLocalPos.z,
     };
 
