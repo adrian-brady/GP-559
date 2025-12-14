@@ -25,7 +25,7 @@ class PlayerController extends Component {
   speed = 5;
 
   /** @type {number} */
-  jumpForce = 5;
+  jumpForce = 7;
 
   /** @type {number} */
   gravity = 9.81;

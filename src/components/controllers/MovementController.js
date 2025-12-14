@@ -47,7 +47,7 @@ class MovementController {
       const currentVel = rigidBody.body.linvel();
       const currentHorizontal = new Vector3(currentVel.x, 0, currentVel.z);
 
-      let acceleration = this.player.isGrounded() ? 8.0 : 0.5;
+      let acceleration = this.player.isGrounded() ? 8.0 : 0.01;
 
       const newHorizontal = new Vector3().lerpVectors(
         currentHorizontal,

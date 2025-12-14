@@ -110,6 +110,7 @@ export function createTargetDummy(entityManager, scene, physicsWorld, config) {
     aiBehavior: AIBehavior.IDLE,
     onDeath: entity => {
       console.log('Target destroyed');
+      createTargetDummy(entityManager, scene, physicsWorld, config);
     },
   });
 
